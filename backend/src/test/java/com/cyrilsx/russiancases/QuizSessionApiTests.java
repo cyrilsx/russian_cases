@@ -81,7 +81,7 @@ class QuizSessionApiTests {
     }
 
     @Test
-    void answeringWithinSessionValidatesAndRecordsProgressOnce() {
+    void answeringWithinSessionAllowsRetriesAndCountsDistinctQuestions() {
         String token = registerUser();
 
         ResponseEntity<Map> created = rest.exchange("/api/levels/2/sessions", HttpMethod.POST,
@@ -96,9 +96,10 @@ class QuizSessionApiTests {
         assertThat(((Number) first.getBody().get("answered")).intValue()).isEqualTo(1);
         assertThat(((Number) first.getBody().get("total")).intValue()).isEqualTo(8);
 
-        ResponseEntity<Map> duplicate = rest.exchange("/api/sessions/" + sessionId + "/answer", HttpMethod.POST,
+        ResponseEntity<Map> retry = rest.exchange("/api/sessions/" + sessionId + "/answer", HttpMethod.POST,
                 new HttpEntity<>(Map.of("questionId", questionId, "optionIndex", 0), auth(token)), Map.class);
-        assertThat(duplicate.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+        assertThat(retry.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(((Number) retry.getBody().get("answered")).intValue()).isEqualTo(1);
 
         ResponseEntity<Map> notInSession = rest.exchange("/api/sessions/" + sessionId + "/answer", HttpMethod.POST,
                 new HttpEntity<>(Map.of("questionId", 999999L, "optionIndex", 0), auth(token)), Map.class);
@@ -106,7 +107,7 @@ class QuizSessionApiTests {
 
         ResponseEntity<Map> progress = rest.exchange("/api/progress/me/summary", HttpMethod.GET,
                 new HttpEntity<>(auth(token)), Map.class);
-        assertThat(((Number) progress.getBody().get("totalAttempts")).longValue()).isEqualTo(1);
+        assertThat(((Number) progress.getBody().get("totalAttempts")).longValue()).isEqualTo(2);
 
         ResponseEntity<Map> fetched = rest.exchange("/api/sessions/" + sessionId, HttpMethod.GET,
                 new HttpEntity<>(auth(token)), Map.class);

@@ -85,9 +85,6 @@ public class QuizSessionService {
         if (!session.getQuestionIds().contains(request.questionId())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "error.badrequest");
         }
-        if (session.getAnsweredIds().contains(request.questionId())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "error.inuse");
-        }
         session.getAnsweredIds().add(request.questionId());
         sessionRepository.save(session);
 
