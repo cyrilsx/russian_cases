@@ -54,6 +54,7 @@
                         <configuration>
                             <sourceDirs>
                                 <sourceDir>${project.basedir}/src/main/kotlin</sourceDir>
+                                <sourceDir>${project.build.directory}/generated-sources/r</sourceDir>
                             </sourceDirs>
                         </configuration>
                     </execution>
