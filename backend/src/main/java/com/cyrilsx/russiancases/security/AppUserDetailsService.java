@@ -2,6 +2,7 @@ package com.cyrilsx.russiancases.security;
 
 import com.cyrilsx.russiancases.model.UserEntity;
 import com.cyrilsx.russiancases.repository.UserRepository;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -23,6 +24,7 @@ public class AppUserDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         UserEntity user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException(username));
-        return new User(user.getUsername(), user.getPasswordHash(), List.of());
+        return new User(user.getUsername(), user.getPasswordHash(),
+                List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name())));
     }
 }

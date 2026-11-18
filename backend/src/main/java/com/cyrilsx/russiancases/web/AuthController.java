@@ -62,6 +62,12 @@ public class AuthController {
 
     @GetMapping("/me")
     public Map<String, String> me(Authentication authentication) {
-        return Map.of("username", authentication.getName());
+        String role = authentication.getAuthorities().stream()
+                .map(a -> a.getAuthority())
+                .filter(a -> a.startsWith("ROLE_"))
+                .map(a -> a.substring("ROLE_".length()))
+                .findFirst()
+                .orElse("USER");
+        return Map.of("username", authentication.getName(), "role", role);
     }
 }

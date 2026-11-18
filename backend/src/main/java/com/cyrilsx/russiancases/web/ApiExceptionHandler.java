@@ -2,6 +2,8 @@ package com.cyrilsx.russiancases.web;
 
 import com.cyrilsx.russiancases.service.ResourceNotFoundException;
 import org.springframework.context.MessageSource;
+import org.springframework.context.NoSuchMessageException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -37,6 +39,11 @@ public class ApiExceptionHandler {
         return build(HttpStatus.BAD_REQUEST, messageSource.getMessage("error.badrequest", null, locale), locale);
     }
 
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<Map<String, Object>> handleDataIntegrity(DataIntegrityViolationException ex, Locale locale) {
+        return build(HttpStatus.CONFLICT, messageSource.getMessage("error.conflict", null, locale), locale);
+    }
+
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<Map<String, Object>> handleResponseStatus(ResponseStatusException ex, Locale locale) {
         HttpStatus status = HttpStatus.valueOf(ex.getStatusCode().value());
@@ -45,7 +52,17 @@ public class ApiExceptionHandler {
             case UNAUTHORIZED -> "error.unauthorized";
             default -> "error.badrequest";
         };
-        return build(status, messageSource.getMessage(key, null, locale), locale);
+        String message = ex.getReason();
+        if (message == null || message.isBlank()) {
+            message = messageSource.getMessage(key, null, locale);
+        } else {
+            try {
+                message = messageSource.getMessage(message, null, locale);
+            } catch (NoSuchMessageException ignored) {
+                // keep the literal reason
+            }
+        }
+        return build(status, message, locale);
     }
 
     private ResponseEntity<Map<String, Object>> build(HttpStatus status, String message, Locale locale) {

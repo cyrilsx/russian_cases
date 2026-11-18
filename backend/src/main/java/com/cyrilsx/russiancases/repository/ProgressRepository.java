@@ -10,5 +10,11 @@ public interface ProgressRepository extends JpaRepository<ProgressEntity, Long> 
 
     List<ProgressEntity> findByUserIdOrderByLastAttemptDesc(String userId);
 
+    List<ProgressEntity> findAllByOrderByUserIdAsc();
+
     Optional<ProgressEntity> findByUserIdAndQuestionId(String userId, Long questionId);
+
+    void deleteByUserId(String userId);
+
+    void deleteByQuestionId(Long questionId);
 }

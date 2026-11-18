@@ -16,6 +16,8 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.util.List;
 import java.util.Locale;
@@ -26,6 +28,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureTestRestTemplate
+@ActiveProfiles("test")
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 class ApiIntegrationTests {
 
     @Autowired
@@ -87,6 +91,7 @@ class ApiIntegrationTests {
                 new HttpEntity<>(authHeaders(token, Locale.ENGLISH)), Map.class);
         assertThat(me.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(me.getBody().get("username")).isEqualTo(username);
+        assertThat(me.getBody().get("role")).isEqualTo("USER");
     }
 
     @Test

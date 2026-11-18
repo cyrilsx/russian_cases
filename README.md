@@ -64,6 +64,23 @@ header obtained from `/api/auth/register` or `/api/auth/login`.
 | GET | `/api/rules?case=GENITIVE` | Rappels de règles (filtre par cas optionnel) |
 | GET | `/api/progress/me` | Progression détaillée de l'utilisateur connecté |
 | GET | `/api/progress/me/summary` | Résumé de progression par niveau |
+| GET | `/api/auth/me` | Utilisateur courant + `role` (`USER` / `ADMIN`) |
+
+### Administration (`/api/admin/**`, rôle `ADMIN` requis)
+
+| Méthode | Endpoint | Description |
+| --- | --- | --- |
+| GET/POST/PUT/DELETE | `/api/admin/levels[/{id}]` | CRUD des niveaux (champs fr + en) |
+| GET/POST/PUT/DELETE | `/api/admin/questions[/{id}]` (`?levelId=` au GET) | CRUD des questions (options fr/en, `correctIndex`, indice, `ruleId`) |
+| GET/POST/PUT/DELETE | `/api/admin/rules[/{id}]` | CRUD des règles (une par cas) |
+| GET | `/api/admin/users` | Liste des utilisateurs |
+| PUT | `/api/admin/users/{id}/role` | Changer un rôle (`{"role": "ADMIN"}`) — pas son propre rôle, pas le dernier admin |
+| DELETE | `/api/admin/users/{id}` | Supprimer un utilisateur (+ sa progression) |
+| GET | `/api/admin/progress` | Progression de tous les utilisateurs |
+| DELETE | `/api/admin/progress/{userId}` | Réinitialiser la progression d'un utilisateur |
+
+Un compte admin est créé au démarrage si absent : `app.admin.username` / `app.admin.password`
+(variables d'environnement `APP_ADMIN_USERNAME` / `APP_ADMIN_PASSWORD` — à changer en production).
 
 La langue est choisie via l'en-tête `Accept-Language: fr` ou `en`.
 Language is selected with the `Accept-Language: fr` or `en` header.

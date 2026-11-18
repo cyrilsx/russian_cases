@@ -3,13 +3,20 @@ package com.cyrilsx.russiancases.seed;
 import com.cyrilsx.russiancases.model.GrammaticalCase;
 import com.cyrilsx.russiancases.model.LevelEntity;
 import com.cyrilsx.russiancases.model.QuestionEntity;
+import com.cyrilsx.russiancases.model.Role;
 import com.cyrilsx.russiancases.model.RuleEntity;
+import com.cyrilsx.russiancases.model.UserEntity;
 import com.cyrilsx.russiancases.repository.LevelRepository;
 import com.cyrilsx.russiancases.repository.QuestionRepository;
 import com.cyrilsx.russiancases.repository.RuleRepository;
+import com.cyrilsx.russiancases.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+
+import java.time.Instant;
 
 import java.util.HashMap;
 import java.util.List;
@@ -21,17 +28,30 @@ public class DataSeeder implements ApplicationRunner {
     private final LevelRepository levelRepository;
     private final RuleRepository ruleRepository;
     private final QuestionRepository questionRepository;
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final String adminUsername;
+    private final String adminPassword;
 
     public DataSeeder(LevelRepository levelRepository,
                       RuleRepository ruleRepository,
-                      QuestionRepository questionRepository) {
+                      QuestionRepository questionRepository,
+                      UserRepository userRepository,
+                      PasswordEncoder passwordEncoder,
+                      @Value("${app.admin.username}") String adminUsername,
+                      @Value("${app.admin.password}") String adminPassword) {
         this.levelRepository = levelRepository;
         this.ruleRepository = ruleRepository;
         this.questionRepository = questionRepository;
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.adminUsername = adminUsername;
+        this.adminPassword = adminPassword;
     }
 
     @Override
     public void run(ApplicationArguments args) {
+        ensureAdminUser();
         if (questionRepository.count() > 0) {
             return;
         }
@@ -260,6 +280,17 @@ public class DataSeeder implements ApplicationRunner {
                 "Après с (avec) → instrumental. Masculin en consonne → -ом.",
                 "After с (with) → instrumental. Masculine consonant takes -ом.",
                 rules.get(GrammaticalCase.INSTRUMENTAL));
+    }
+
+    private void ensureAdminUser() {
+        if (userRepository.findByUsername(adminUsername).isEmpty()) {
+            UserEntity admin = new UserEntity();
+            admin.setUsername(adminUsername);
+            admin.setPasswordHash(passwordEncoder.encode(adminPassword));
+            admin.setCreatedAt(Instant.now());
+            admin.setRole(Role.ADMIN);
+            userRepository.save(admin);
+        }
     }
 
     private RuleEntity rule(GrammaticalCase grammaticalCase, String titleFr, String titleEn,

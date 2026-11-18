@@ -9,5 +9,7 @@ public interface QuestionRepository extends JpaRepository<QuestionEntity, Long> 
 
     List<QuestionEntity> findByLevelIdOrderByIdAsc(Long levelId);
 
+    List<QuestionEntity> findByRuleId(Long ruleId);
+
     long countByLevelId(Long levelId);
 }
