@@ -13,14 +13,15 @@
     <artifactId>russian-cases-android</artifactId>
     <name>russian-cases-android</name>
     <packaging>apk</packaging>
-    <description>Android app (fr/en) to learn and practise Russian grammatical cases - built as an APK with android-maven-plugin</description>
+    <description>Android app (fr/en, Kotlin sources) to learn and practise Russian grammatical cases - built as an APK with android-maven-plugin</description>
 
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
-        <android.platform>29</android.platform>
+        <android.platform>36</android.platform>
         <android.build-tools>30.0.3</android.build-tools>
         <android-maven-plugin.version>4.6.0</android-maven-plugin.version>
+        <kotlin.version>1.7.10</kotlin.version>
     </properties>
 
     <dependencies>
@@ -30,10 +31,37 @@
             <version>4.1.1.4</version>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-stdlib</artifactId>
+            <version>${kotlin.version}</version>
+        </dependency>
     </dependencies>
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.jetbrains.kotlin</groupId>
+                <artifactId>kotlin-maven-plugin</artifactId>
+                <version>${kotlin.version}</version>
+                <executions>
+                    <execution>
+                        <id>compile</id>
+                        <phase>process-sources</phase>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                        <configuration>
+                            <sourceDirs>
+                                <sourceDir>${project.basedir}/src/main/kotlin</sourceDir>
+                            </sourceDirs>
+                        </configuration>
+                    </execution>
+                </executions>
+                <configuration>
+                    <jvmTarget>1.8</jvmTarget>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>com.simpligility.maven.plugins</groupId>
                 <artifactId>android-maven-plugin</artifactId>

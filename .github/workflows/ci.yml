@@ -49,7 +49,7 @@ jobs:
       - name: Install SDK packages
         run: |
           SDKMGR="$(ls -d "$ANDROID_HOME"/cmdline-tools/*/bin/sdkmanager | sort -V | tail -1)"
-          "$SDKMGR" "platforms;android-29" "build-tools;30.0.3"
+          "$SDKMGR" "platforms;android-36" "build-tools;30.0.3"
       - name: Shim legacy tools/source.properties required by android-maven-plugin
         run: |
           mkdir -p "$ANDROID_HOME/tools"
