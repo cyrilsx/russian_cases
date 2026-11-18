@@ -20,6 +20,19 @@ jobs:
       - name: Build and test backend and webapp
         run: mvn -B -ntp verify -pl webapp,backend
 
+  webapp-e2e:
+    name: Webapp integration checks (API contract + E2E smoke)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+      - name: Frontend/backend API contract check
+        run: python3 webapp/tests/contract_check.py
+      - name: Webapp E2E smoke test (mock API + DOM)
+        run: node webapp/tests/e2e_smoke.mjs
+
   android:
     name: Android APK (SDK setup on JDK 21, build on JDK 8)
     runs-on: ubuntu-latest

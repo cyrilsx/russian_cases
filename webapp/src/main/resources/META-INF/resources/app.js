@@ -1,5 +1,6 @@
 const state = {
     lang: localStorage.getItem("rc-lang") || "fr",
+    theme: localStorage.getItem("rc-theme") || "auto",
     token: localStorage.getItem("rc-token") || null,
     username: localStorage.getItem("rc-username") || null,
     role: null,
@@ -81,6 +82,24 @@ const i18n = {
         all: "Tous",
         saved: "Enregistré.",
         error: "Erreur",
+        skipLink: "Aller au contenu principal",
+        navLabel: "Navigation principale",
+        footer: "Les cas russes — quiz, indices et rappels de règles pour maîtriser les six cas grammaticaux russes.",
+        adminForm: "Formulaire d'administration",
+        confirm: "Confirmer",
+        ok: "OK",
+        loading: "Chargement…",
+        noLevels: "Aucun niveau disponible pour le moment.",
+        noQuestions: "Aucune question dans ce niveau pour le moment.",
+        loadError: "Impossible de charger les données.",
+        retry: "Réessayer",
+        questionOf: (i, n) => "Question " + i + " / " + n,
+        optionsLabel: "Réponses possibles",
+        progressLabel: "Progression dans le niveau",
+        theme: "Thème",
+        themeAuto: "automatique",
+        themeLight: "clair",
+        themeDark: "sombre",
         quizDone: "Quiz terminé : %1$d bonnes réponses sur %2$d !",
     },
     en: {
@@ -150,6 +169,24 @@ const i18n = {
         all: "All",
         saved: "Saved.",
         error: "Error",
+        skipLink: "Skip to main content",
+        navLabel: "Main navigation",
+        footer: "Russian Cases — quizzes, hints and rule reminders to master the six Russian grammatical cases.",
+        adminForm: "Administration form",
+        confirm: "Confirm",
+        ok: "OK",
+        loading: "Loading…",
+        noLevels: "No levels available yet.",
+        noQuestions: "No questions in this level yet.",
+        loadError: "Could not load the data.",
+        retry: "Retry",
+        questionOf: (i, n) => "Question " + i + " / " + n,
+        optionsLabel: "Possible answers",
+        progressLabel: "Progress in this level",
+        theme: "Theme",
+        themeAuto: "auto",
+        themeLight: "light",
+        themeDark: "dark",
         quizDone: "Quiz done: %1$d correct out of %2$d!",
     },
 };
@@ -209,7 +246,18 @@ function applyLang() {
     el("password-label").textContent = t().password;
     el("login-btn").textContent = t().login;
     el("register-btn").textContent = t().register;
-    el("logout-btn").textContent = t().logout;
+    el("logout-label").textContent = t().logout;
+    el("skip-link").textContent = t().skipLink;
+    el("main-nav").setAttribute("aria-label", t().navLabel);
+    el("admin-view").setAttribute("aria-label", t().admin);
+    el("admin-form").setAttribute("aria-label", t().adminForm);
+    el("footer-text").textContent = t().footer;
+    el("modal-cancel").textContent = t().cancel;
+    el("options").setAttribute("aria-label", t().optionsLabel);
+    el("progress-bar").setAttribute("aria-label", t().progressLabel);
+    if (!el("quiz-section").classList.contains("hidden") && state.questions.length) {
+        el("question-counter").textContent = t().questionOf(state.questionIndex + 1, state.questions.length);
+    }
     el("nav-quiz-btn").textContent = t().quiz;
     el("nav-admin-btn").textContent = t().admin;
     document.querySelectorAll(".admin-tab").forEach((b) => {
@@ -284,6 +332,58 @@ function logout() {
     showAuth();
 }
 
+let modalResolve = null;
+
+function openModal(message, mode) {
+    const dlg = el("modal-dialog");
+    el("modal-message").textContent = message;
+    el("modal-ok").textContent = mode === "confirm" ? t().confirm : t().ok;
+    el("modal-cancel").classList.toggle("hidden", mode !== "confirm");
+    dlg.showModal();
+    return new Promise((resolve) => { modalResolve = resolve; });
+}
+
+function askConfirm(message) {
+    return openModal(message, "confirm");
+}
+
+function showAlert(message) {
+    return openModal(message, "alert");
+}
+
+function applyTheme(theme) {
+    state.theme = theme;
+    localStorage.setItem("rc-theme", theme);
+    if (theme === "auto") document.documentElement.removeAttribute("data-theme");
+    else document.documentElement.setAttribute("data-theme", theme);
+    const icons = { auto: "◐", light: "☀", dark: "🌙" };
+    el("theme-icon").textContent = icons[theme];
+    const label = t()["theme" + theme.charAt(0).toUpperCase() + theme.slice(1)];
+    el("theme-btn").setAttribute("aria-label", t().theme + " : " + label);
+}
+
+function cycleTheme() {
+    const order = ["auto", "light", "dark"];
+    applyTheme(order[(order.indexOf(state.theme) + 1) % order.length]);
+}
+
+function toast(message, kind) {
+    const item = document.createElement("div");
+    item.className = "toast" + (kind ? " " + kind : "");
+    item.textContent = message;
+    el("toasts").appendChild(item);
+    requestAnimationFrame(() => item.classList.add("show"));
+    setTimeout(() => {
+        item.classList.remove("show");
+        setTimeout(() => item.remove(), 250);
+    }, 3500);
+}
+
+function setLangAuto(node, text) {
+    if (/[\u0400-\u04FF]/.test(text)) node.setAttribute("lang", "ru");
+    else node.removeAttribute("lang");
+}
+
 function setView(view) {
     state.view = view;
     el("nav-quiz-btn").classList.toggle("active", view === "quiz");
@@ -294,12 +394,27 @@ function setView(view) {
 }
 
 async function loadLevels() {
-    state.levels = await api("/api/levels");
     const container = el("levels");
+    container.innerHTML = "<p class='loading' role='status'>" + esc(t().loading) + "</p>";
+    let levels;
+    try {
+        levels = await api("/api/levels");
+    } catch (e) {
+        container.innerHTML = "<p class='feedback ko' role='alert'>" + esc(t().loadError) + "</p>" +
+            "<button class='btn secondary' id='levels-retry'>" + esc(t().retry) + "</button>";
+        el("levels-retry").addEventListener("click", loadLevels);
+        return;
+    }
+    state.levels = levels;
     container.innerHTML = "";
-    for (const level of state.levels) {
+    if (!levels.length) {
+        container.innerHTML = "<p class='empty'>" + esc(t().noLevels) + "</p>";
+        return;
+    }
+    for (const level of levels) {
         const card = document.createElement("button");
         card.className = "level-card";
+        card.type = "button";
         card.innerHTML = "<h3></h3><p class='description'></p><small></small>";
         card.querySelector("h3").textContent = level.title;
         card.querySelector(".description").textContent = level.description;
@@ -310,8 +425,20 @@ async function loadLevels() {
 }
 
 async function startLevel(level) {
-    state.session = await api("/api/levels/" + level.id + "/sessions", { method: "POST" });
-    state.questions = state.session.questions;
+    let session;
+    try {
+        session = await api("/api/levels/" + level.id + "/sessions", { method: "POST" });
+    } catch (e) {
+        toast(e.message, "ko");
+        return;
+    }
+    const questions = session.questions || [];
+    if (!questions.length) {
+        toast(t().noQuestions, "ko");
+        return;
+    }
+    state.session = session;
+    state.questions = questions;
     state.questionIndex = 0;
     state.sessionCorrect = 0;
     el("levels-section").classList.add("hidden");
@@ -325,27 +452,52 @@ function showQuestion() {
     const q = state.questions[state.questionIndex];
     state.selectedOption = null;
     el("question-case").textContent = q.caseLabel;
+    setLangAuto(el("question-case"), q.caseLabel);
     el("question-prompt").textContent = q.prompt;
+    setLangAuto(el("question-prompt"), q.prompt);
     el("feedback").textContent = "";
     el("feedback").className = "feedback";
     el("hint-box").classList.add("hidden");
     el("rule-box").classList.add("hidden");
     el("next-btn").classList.add("hidden");
     el("submit-btn").classList.remove("hidden");
+    el("submit-btn").disabled = true;
+    el("question-counter").textContent = t().questionOf(state.questionIndex + 1, state.questions.length);
     const options = el("options");
     options.innerHTML = "";
     q.options.forEach((option, index) => {
         const btn = document.createElement("button");
         btn.className = "option";
+        btn.type = "button";
+        btn.setAttribute("role", "radio");
+        btn.setAttribute("aria-checked", "false");
         btn.textContent = option;
-        btn.addEventListener("click", () => {
-            state.selectedOption = index;
-            options.querySelectorAll(".option").forEach((o) => o.classList.remove("selected"));
-            btn.classList.add("selected");
-        });
+        setLangAuto(btn, option);
+        btn.addEventListener("click", () => selectOption(index));
         options.appendChild(btn);
     });
-    el("progress-fill").style.width = (100 * state.questionIndex / state.questions.length) + "%";
+    updateProgress(false);
+}
+
+function selectOption(index) {
+    state.selectedOption = index;
+    el("options").querySelectorAll(".option").forEach((o, i) => {
+        o.classList.toggle("selected", i === index);
+        o.setAttribute("aria-checked", i === index ? "true" : "false");
+    });
+    el("submit-btn").disabled = false;
+}
+
+function updateProgress(completed, answered, total) {
+    let pct;
+    if (answered != null && total) {
+        pct = Math.min(100, Math.round(100 * answered / total));
+    } else {
+        const t = state.questions.length || 1;
+        pct = Math.min(100, Math.round(100 * (state.questionIndex + (completed ? 1 : 0)) / t));
+    }
+    el("progress-fill").style.width = pct + "%";
+    el("progress-bar").setAttribute("aria-valuenow", String(pct));
 }
 
 async function submitAnswer() {
@@ -353,10 +505,16 @@ async function submitAnswer() {
         return;
     }
     const q = state.questions[state.questionIndex];
-    const result = await api("/api/sessions/" + state.session.id + "/answer", {
-        method: "POST",
-        body: JSON.stringify({ questionId: q.id, optionIndex: state.selectedOption }),
-    });
+    let result;
+    try {
+        result = await api("/api/sessions/" + state.session.id + "/answer", {
+            method: "POST",
+            body: JSON.stringify({ questionId: q.id, optionIndex: state.selectedOption }),
+        });
+    } catch (e) {
+        toast(e.message, "ko");
+        return;
+    }
     const feedback = el("feedback");
     if (result.correct) {
         state.sessionCorrect++;
@@ -365,18 +523,22 @@ async function submitAnswer() {
             : t().correct;
         feedback.classList.add("ok");
         el("options").children[result.correctIndex].classList.add("correct");
+        el("options").querySelectorAll(".option").forEach((o) => { o.disabled = true; });
         el("submit-btn").classList.add("hidden");
         el("next-btn").classList.remove("hidden");
+        el("next-btn").focus();
     } else {
         feedback.textContent = t().wrong;
         feedback.classList.add("ko");
         el("options").children[state.selectedOption].classList.add("wrong");
     }
     el("hint-box").textContent = result.hint;
+    setLangAuto(el("hint-box"), result.hint);
     if (result.ruleTitle) {
         el("rule-box").textContent = result.ruleTitle + "\n\n" + result.ruleContent;
+        setLangAuto(el("rule-box"), result.ruleTitle + result.ruleContent);
     }
-    el("progress-fill").style.width = (100 * result.answered / result.total) + "%";
+    updateProgress(true, result.answered, result.total);
     loadSummary();
 }
 
@@ -410,7 +572,7 @@ async function loadSummary() {
 async function renderAdminTab() {
     document.querySelectorAll(".admin-tab").forEach((b) =>
         b.classList.toggle("active", b.dataset.tab === state.adminTab));
-    el("admin-form").classList.add("hidden");
+    el("admin-form").close();
     const content = el("admin-content");
     content.innerHTML = "";
     try {
@@ -450,11 +612,11 @@ async function renderAdminLevels(content) {
     content.querySelectorAll("tbody tr").forEach((tr, i) => {
         tr.querySelector(".act-edit").addEventListener("click", () => levelForm(levels[i]));
         tr.querySelector(".act-del").addEventListener("click", async () => {
-            if (!confirm(t().confirmDelete)) return;
+            if (!(await askConfirm(t().confirmDelete))) return;
             try {
                 await api("/api/admin/levels/" + levels[i].id, { method: "DELETE" });
                 renderAdminTab();
-            } catch (e) { alert(e.message); }
+            } catch (e) { showAlert(e.message); }
         });
     });
 }
@@ -509,11 +671,11 @@ async function renderAdminQuestions(content) {
     content.querySelectorAll("tbody tr").forEach((tr, i) => {
         tr.querySelector(".act-edit").addEventListener("click", () => questionForm(questions[i], levels, rules, cases));
         tr.querySelector(".act-del").addEventListener("click", async () => {
-            if (!confirm(t().confirmDelete)) return;
+            if (!(await askConfirm(t().confirmDelete))) return;
             try {
                 await api("/api/admin/questions/" + questions[i].id, { method: "DELETE" });
                 renderAdminTab();
-            } catch (e) { alert(e.message); }
+            } catch (e) { showAlert(e.message); }
         });
     });
 }
@@ -564,11 +726,11 @@ async function renderAdminRules(content) {
     content.querySelectorAll("tbody tr").forEach((tr, i) => {
         tr.querySelector(".act-edit").addEventListener("click", () => ruleForm(rules[i], rules));
         tr.querySelector(".act-del").addEventListener("click", async () => {
-            if (!confirm(t().confirmDelete)) return;
+            if (!(await askConfirm(t().confirmDelete))) return;
             try {
                 await api("/api/admin/rules/" + rules[i].id, { method: "DELETE" });
                 renderAdminTab();
-            } catch (e) { alert(e.message); }
+            } catch (e) { showAlert(e.message); }
         });
     });
 }
@@ -613,14 +775,14 @@ async function renderAdminUsers(content) {
                     method: "PUT",
                     body: JSON.stringify({ role: e.target.value }),
                 });
-            } catch (err) { alert(err.message); renderAdminTab(); }
+            } catch (err) { showAlert(err.message); renderAdminTab(); }
         });
         tr.querySelector(".act-del").addEventListener("click", async () => {
-            if (!confirm(t().confirmDelete)) return;
+            if (!(await askConfirm(t().confirmDelete))) return;
             try {
                 await api("/api/admin/users/" + users[i].id, { method: "DELETE" });
                 renderAdminTab();
-            } catch (e) { alert(e.message); }
+            } catch (e) { showAlert(e.message); }
         });
     });
 }
@@ -639,18 +801,17 @@ async function renderAdminProgress(content) {
     content.querySelectorAll("tbody tr").forEach((tr) => {
         tr.querySelector(".act-reset").addEventListener("click", async () => {
             const userId = tr.firstElementChild.textContent;
-            if (!confirm(t().confirmReset)) return;
+            if (!(await askConfirm(t().confirmReset))) return;
             try {
                 await api("/api/admin/progress/" + encodeURIComponent(userId), { method: "DELETE" });
                 renderAdminTab();
-            } catch (e) { alert(e.message); }
+            } catch (e) { showAlert(e.message); }
         });
     });
 }
 
 function showAdminForm(fields, onSubmit) {
     const form = el("admin-form");
-    form.classList.remove("hidden");
     let html = "";
     for (const f of fields) {
         html += "<label>" + esc(f.label) + "</label>";
@@ -668,19 +829,21 @@ function showAdminForm(fields, onSubmit) {
         "<button class='btn secondary' id='admin-cancel'>" + esc(t().cancel) + "</button></div>" +
         "<p id='admin-form-msg' class='feedback'></p>";
     form.innerHTML = html;
-    el("admin-cancel").addEventListener("click", () => form.classList.add("hidden"));
+    form.onclick = (e) => { if (e.target === form) form.close(); };
+    el("admin-cancel").addEventListener("click", () => form.close());
     el("admin-save").addEventListener("click", async () => {
         const values = {};
         form.querySelectorAll(".fld").forEach((input) => { values[input.dataset.key] = input.value; });
         try {
             await onSubmit(values);
-            form.classList.add("hidden");
+            form.close();
+            toast(t().saved, "ok");
         } catch (e) {
             el("admin-form-msg").textContent = e.message;
             el("admin-form-msg").className = "feedback ko";
         }
     });
-    form.scrollIntoView({ behavior: "smooth" });
+    form.showModal();
 }
 
 /* ---------------- wiring ---------------- */
@@ -713,7 +876,37 @@ el("next-btn").addEventListener("click", () => {
 });
 el("hint-btn").addEventListener("click", () => el("hint-box").classList.toggle("hidden"));
 el("rule-btn").addEventListener("click", () => el("rule-box").classList.toggle("hidden"));
+el("modal-ok").addEventListener("click", () => {
+    el("modal-dialog").close();
+    if (modalResolve) { modalResolve(true); modalResolve = null; }
+});
+el("modal-cancel").addEventListener("click", () => {
+    el("modal-dialog").close();
+    if (modalResolve) { modalResolve(false); modalResolve = null; }
+});
+el("modal-dialog").addEventListener("click", (e) => {
+    if (e.target === e.currentTarget) {
+        e.currentTarget.close();
+        if (modalResolve) { modalResolve(false); modalResolve = null; }
+    }
+});
+el("theme-btn").addEventListener("click", cycleTheme);
+el("options").addEventListener("keydown", (e) => {
+    if (!["ArrowDown", "ArrowRight", "ArrowUp", "ArrowLeft"].includes(e.key)) return;
+    const opts = Array.from(el("options").querySelectorAll(".option"));
+    if (!opts.length) return;
+    const cur = opts.indexOf(document.activeElement);
+    e.preventDefault();
+    let next;
+    if (e.key === "ArrowDown" || e.key === "ArrowRight") next = cur < 0 ? 0 : (cur + 1) % opts.length;
+    else next = cur < 0 ? opts.length - 1 : (cur - 1 + opts.length) % opts.length;
+    opts[next].focus();
+    selectOption(next);
+});
+[el("username"), el("password")].forEach((input) =>
+    input.addEventListener("keydown", (e) => { if (e.key === "Enter") authenticate("login"); }));
 
+applyTheme(state.theme);
 applyLang();
 if (state.token) {
     showApp();

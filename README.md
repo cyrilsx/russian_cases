@@ -124,5 +124,7 @@ Le module `android` n'est inclus dans le build que si `ANDROID_HOME` est défini
 
 ## CI
 
-`.github/workflows/ci.yml` : deux jobs — backend+webapp (JDK 25, `mvn verify -pl webapp,backend`)
-et APK Android (JDK 8 + SDK 29, `mvn verify -pl android`).
+`.github/workflows/ci.yml` : trois jobs — backend+webapp (JDK 25, `mvn verify -pl webapp,backend`),
+vérifications d'intégration de la webapp (contrat API `webapp/tests/contract_check.py` + test E2E
+Node `webapp/tests/e2e_smoke.mjs`, exécutés en local avec `python3 webapp/tests/contract_check.py`
+et `node webapp/tests/e2e_smoke.mjs`) et APK Android (JDK 8 + SDK 29, `mvn verify -pl android`).
