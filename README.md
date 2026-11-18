@@ -19,7 +19,7 @@ Fonctionnalités / Features:
 ```
 russian-cases/
 ├── pom.xml                  # parent POM (Maven multi-module)
-├── backend/                 # Spring Boot 4 REST API (Java 21, H2 in-memory)
+├── backend/                 # Spring Boot 4 REST API (Java 25, H2 in-memory)
 ├── webapp/                  # webapp statique (HTML/CSS/JS vanilla, fr/en), servie par le backend
 ├── android/                 # application Android (packaging APK via android-maven-plugin)
 └── .github/workflows/ci.yml # CI GitHub Actions
@@ -27,8 +27,9 @@ russian-cases/
 
 ## Prérequis / Prerequisites
 
-- JDK 21 + Maven 3.9+ pour le backend et la webapp
+- JDK 25 + Maven 3.9+ pour le backend et la webapp
 - JDK 8 + Android SDK (platform 29, build-tools 30.0.3, `ANDROID_HOME` renseigné) pour le module Android
+  (android-maven-plugin 4.6.0 et son `dx` historique nécessitent JDK 8)
 
 ## Lancer le backend + la webapp / Run backend + webapp
 
@@ -66,5 +67,5 @@ Le module `android` n'est inclus dans le build que si `ANDROID_HOME` est défini
 
 ## CI
 
-`.github/workflows/ci.yml` : deux jobs — backend+webapp (JDK 21, `mvn verify -pl webapp,backend`)
+`.github/workflows/ci.yml` : deux jobs — backend+webapp (JDK 25, `mvn verify -pl webapp,backend`)
 et APK Android (JDK 8 + SDK 29, `mvn verify -pl android`).
