@@ -28,9 +28,9 @@ russian-cases/
 ## Prérequis / Prerequisites
 
 - JDK 25 + Maven 3.9+ pour le backend et la webapp
-- JDK 8 + Android SDK (platform 36, build-tools 30.0.3, `ANDROID_HOME` renseigné) pour le module Android
-  (android-maven-plugin 4.6.0 et son `dx` historique nécessitent JDK 8 ; build-tools 30.0.3 est gardé
-  car `dx` a été retiré des build-tools récents — on compile contre la plateforme 36)
+- JDK 8 + Android SDK (platform 29, build-tools 30.0.3, `ANDROID_HOME` renseigné) pour le module Android
+  (android-maven-plugin 4.6.0 et son `aapt`/`dx` historiques nécessitent JDK 8 ; `aapt` v1 ne peut pas
+  lire les resources des plateformes 34+, donc on compile contre la plateforme 29 — voir note ci-dessous)
 
 ## Lancer le backend + la webapp / Run backend + webapp
 
@@ -106,13 +106,16 @@ Language is selected with the `Accept-Language: fr` or `en` header.
 ## Android
 
 ```bash
-export ANDROID_HOME=/chemin/vers/android-sdk   # platform android-36 + build-tools 30.0.3
+export ANDROID_HOME=/chemin/vers/android-sdk   # platform android-29 + build-tools 30.0.3
 mvn -pl android package                          # produit android/target/*.apk (JDK 8)
 ```
 
 Les sources du module Android sont en **Kotlin** (`android/src/main/kotlin`, compilées par
-kotlin-maven-plugin 1.7.10, `jvmTarget 1.8` pour rester compatible avec `dx`). L'app cible
-Android 16 (`targetSdkVersion 36`, `minSdkVersion 21`).
+kotlin-maven-plugin 1.7.10, `jvmTarget 1.8` pour rester compatible avec `dx`). L'app **cible
+Android 16** (`targetSdkVersion 36`, `minSdkVersion 21`) : elle s'installe et tourne sur Android 16.
+La compilation se fait contre la plateforme 29 car le `aapt` v1 d'android-maven-plugin 4.6.0 ne sait
+pas parser les resources des plateformes récentes ; passer `compileSdk` à 36 nécessiterait de migrer
+le build vers AGP/Gradle.
 
 L'app se connecte à l'API authentifiée (JWT) : écran de connexion/inscription, liste des
 niveaux, quiz avec indice et rappel de règle, progression (`/api/progress/me/summary`).
