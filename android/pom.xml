@@ -21,7 +21,7 @@
         <android.platform>29</android.platform>
         <android.build-tools>30.0.3</android.build-tools>
         <android-maven-plugin.version>4.6.0</android-maven-plugin.version>
-        <kotlin.version>1.5.32</kotlin.version>
+        <kotlin.version>1.3.72</kotlin.version>
     </properties>
 
     <dependencies>
@@ -73,7 +73,6 @@
                         <platform>${android.platform}</platform>
                         <buildTools>${android.build-tools}</buildTools>
                     </sdk>
-                    <dexCompiler>d8</dexCompiler>
                     <dex>
                         <dexArguments>--min-sdk-version=26</dexArguments>
                     </dex>
