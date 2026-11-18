@@ -73,8 +73,8 @@ public class QuizSessionService {
     public QuizSessionDto getSession(Long id, String userId, String lang) {
         QuizSessionEntity session = findOwned(id, userId);
         List<QuestionEntity> questions = session.getQuestionIds().stream()
-                .map(questionRepository::findById)
-                .map(q -> q.orElseThrow(() -> new ResourceNotFoundException("question", id)))
+                .map(questionId -> questionRepository.findById(questionId)
+                        .orElseThrow(() -> new ResourceNotFoundException("question", questionId)))
                 .toList();
         return toDto(session, questions, lang);
     }
@@ -85,8 +85,10 @@ public class QuizSessionService {
         if (!session.getQuestionIds().contains(request.questionId())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "error.badrequest");
         }
-        session.getAnsweredIds().add(request.questionId());
-        sessionRepository.save(session);
+        if (!session.getAnsweredIds().contains(request.questionId())) {
+            session.getAnsweredIds().add(request.questionId());
+            sessionRepository.save(session);
+        }
 
         AnswerResponse result = quizService.answer(
                 request.questionId(), new AnswerRequest(request.optionIndex()), userId, lang);
