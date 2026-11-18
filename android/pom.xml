@@ -73,8 +73,8 @@
                         <platform>${android.platform}</platform>
                         <buildTools>${android.build-tools}</buildTools>
                     </sdk>
+                    <dexCompiler>d8</dexCompiler>
                     <dex>
-                        <dexCompiler>d8</dexCompiler>
                         <dexArguments>--min-sdk-version=26</dexArguments>
                     </dex>
                 </configuration>
