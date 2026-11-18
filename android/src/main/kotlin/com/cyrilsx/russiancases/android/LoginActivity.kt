@@ -21,12 +21,12 @@ class LoginActivity : Activity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
 
-        serverUrlInput = findViewById(R.id.server_url)
-        usernameInput = findViewById(R.id.username)
-        passwordInput = findViewById(R.id.password)
-        errorText = findViewById(R.id.auth_error)
-        loginButton = findViewById(R.id.login_button)
-        registerButton = findViewById(R.id.register_button)
+        serverUrlInput = findViewById(R.id.server_url) as EditText
+        usernameInput = findViewById(R.id.username) as EditText
+        passwordInput = findViewById(R.id.password) as EditText
+        errorText = findViewById(R.id.auth_error) as TextView
+        loginButton = findViewById(R.id.login_button) as Button
+        registerButton = findViewById(R.id.register_button) as Button
 
         val prefs = getSharedPreferences("auth", MODE_PRIVATE)
         serverUrlInput.setText(prefs.getString("base_url", getString(R.string.default_server_url)))

@@ -45,19 +45,19 @@ class QuizActivity : Activity() {
             prefs.getString("token", null)
         )
 
-        titleText = findViewById(R.id.level_title)
-        counterText = findViewById(R.id.question_counter)
-        caseText = findViewById(R.id.question_case)
-        promptText = findViewById(R.id.question_prompt)
-        optionsGroup = findViewById(R.id.options_group)
-        feedbackText = findViewById(R.id.feedback)
-        hintText = findViewById(R.id.hint_box)
-        ruleText = findViewById(R.id.rule_box)
-        submitButton = findViewById(R.id.submit_button)
-        hintButton = findViewById(R.id.hint_button)
-        ruleButton = findViewById(R.id.rule_button)
-        nextButton = findViewById(R.id.next_button)
-        backButton = findViewById(R.id.back_button)
+        titleText = findViewById(R.id.level_title) as TextView
+        counterText = findViewById(R.id.question_counter) as TextView
+        caseText = findViewById(R.id.question_case) as TextView
+        promptText = findViewById(R.id.question_prompt) as TextView
+        optionsGroup = findViewById(R.id.options_group) as RadioGroup
+        feedbackText = findViewById(R.id.feedback) as TextView
+        hintText = findViewById(R.id.hint_box) as TextView
+        ruleText = findViewById(R.id.rule_box) as TextView
+        submitButton = findViewById(R.id.submit_button) as Button
+        hintButton = findViewById(R.id.hint_button) as Button
+        ruleButton = findViewById(R.id.rule_button) as Button
+        nextButton = findViewById(R.id.next_button) as Button
+        backButton = findViewById(R.id.back_button) as Button
 
         titleText.text = intent.getStringExtra("level_title")
 

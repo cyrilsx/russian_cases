@@ -32,10 +32,10 @@ class MainActivity : Activity() {
         api = client
 
         setContentView(R.layout.activity_main)
-        userText = findViewById(R.id.current_user)
-        summaryText = findViewById(R.id.summary)
-        levelsList = findViewById(R.id.levels_list)
-        val logoutButton: Button = findViewById(R.id.logout_button)
+        userText = findViewById(R.id.current_user) as TextView
+        summaryText = findViewById(R.id.summary) as TextView
+        levelsList = findViewById(R.id.levels_list) as ListView
+        val logoutButton: Button = findViewById(R.id.logout_button) as Button
 
         userText.setText(getString(R.string.logged_in_as, prefs.getString("username", "")))
         levelsAdapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, mutableListOf())
