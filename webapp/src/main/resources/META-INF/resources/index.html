@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Les cas russes / Russian Cases</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header>
+    <h1 id="app-title">Les cas russes</h1>
+    <div class="lang-toggle">
+        <button id="lang-fr" class="lang-btn">FR</button>
+        <button id="lang-en" class="lang-btn">EN</button>
+    </div>
+</header>
+
+<main>
+    <section id="levels-section">
+        <h2 id="levels-heading">Niveaux</h2>
+        <div id="levels" class="levels"></div>
+    </section>
+
+    <section id="quiz-section" class="hidden">
+        <button id="back-btn" class="btn secondary">← <span id="back-label">Retour</span></button>
+        <h2 id="level-title"></h2>
+        <p id="level-description" class="description"></p>
+        <div id="progress-bar" class="progress-bar"><div id="progress-fill"></div></div>
+        <div id="question-card" class="card">
+            <p id="question-case" class="case-label"></p>
+            <p id="question-prompt" class="prompt"></p>
+            <div id="options"></div>
+            <div class="actions">
+                <button id="submit-btn" class="btn primary">Valider</button>
+                <button id="hint-btn" class="btn secondary">Indice</button>
+                <button id="rule-btn" class="btn secondary">Rappel de règle</button>
+            </div>
+            <p id="feedback" class="feedback"></p>
+            <div id="hint-box" class="hint hidden"></div>
+            <div id="rule-box" class="rule hidden"></div>
+        </div>
+        <button id="next-btn" class="btn primary hidden">Question suivante →</button>
+    </section>
+
+    <section id="progress-section">
+        <h2 id="progress-heading">Ma progression</h2>
+        <div id="progress-summary"></div>
+    </section>
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>

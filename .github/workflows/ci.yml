@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [main, "vibe/**"]
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend-webapp:
+    name: Backend + Webapp (Spring Boot 4, JDK 21)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+      - name: Build and test backend and webapp
+        run: mvn -B -ntp verify -pl webapp,backend
+
+  android:
+    name: Android APK (JDK 8 + Android SDK 29)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "8"
+          cache: maven
+      - uses: android-actions/setup-android@v3
+      - name: Accept SDK licenses
+        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses
+      - name: Install SDK packages
+        run: "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-29" "build-tools;30.0.3"
+      - name: Shim legacy tools/source.properties required by android-maven-plugin
+        run: |
+          mkdir -p "$ANDROID_HOME/tools"
+          printf 'Pkg.Revision=26.1.1\n' > "$ANDROID_HOME/tools/source.properties"
+      - name: Build the APK
+        run: mvn -B -ntp verify -pl android

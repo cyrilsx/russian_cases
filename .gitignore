@@ -1,0 +1,10 @@
+target/
+*.apk
+*.ap_
+*.class
+.idea/
+*.iml
+.vscode/
+local.properties
+.DS_Store
+*.log

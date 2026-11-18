@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.cyrilsx</groupId>
+        <artifactId>russian-cases-parent</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>russian-cases-android</artifactId>
+    <name>russian-cases-android</name>
+    <packaging>apk</packaging>
+    <description>Android app (fr/en) to learn and practise Russian grammatical cases - built as an APK with android-maven-plugin</description>
+
+    <properties>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+        <android.platform>29</android.platform>
+        <android-maven-plugin.version>4.6.0</android-maven-plugin.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.google.android</groupId>
+            <artifactId>android</artifactId>
+            <version>4.1.1.4</version>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>com.simpligility.maven.plugins</groupId>
+                <artifactId>android-maven-plugin</artifactId>
+                <version>${android-maven-plugin.version}</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <sdk>
+                        <platform>${android.platform}</platform>
+                    </sdk>
+                </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>javax.xml.bind</groupId>
+                        <artifactId>jaxb-api</artifactId>
+                        <version>2.3.1</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.glassfish.jaxb</groupId>
+                        <artifactId>jaxb-runtime</artifactId>
+                        <version>2.3.1</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+        </plugins>
+    </build>
+</project>
