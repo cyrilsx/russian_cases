@@ -42,19 +42,41 @@ The webapp is served by the backend at [http://localhost:8080](http://localhost:
 
 ## API
 
+Toutes les routes `/api/**` (sauf `register`/`login`) nécessitent un en-tête
+`Authorization: Bearer <token>` obtenu via `/api/auth/register` ou `/api/auth/login`.
+All `/api/**` routes (except `register`/`login`) require an `Authorization: Bearer <token>`
+header obtained from `/api/auth/register` or `/api/auth/login`.
+
 | Méthode | Endpoint | Description |
 | --- | --- | --- |
+| POST | `/api/auth/register` | Créer un compte (`{"username": "...", "password": "..."}`) → `201 {"token", "username"}` |
+| POST | `/api/auth/login` | Se connecter → `200 {"token", "username"}` (401 si invalide) |
+| GET | `/api/auth/me` | Utilisateur courant |
 | GET | `/api/levels` | Liste des niveaux (avec nombre de questions) |
 | GET | `/api/levels/{id}/questions` | Questions d'un niveau |
 | GET | `/api/questions/{id}` | Une question |
-| POST | `/api/questions/{id}/answer` | Répondre (`{"userId": "...", "optionIndex": 0}`) → résultat + indice + règle |
+| POST | `/api/questions/{id}/answer` | Répondre (`{"optionIndex": 0}`) → résultat + indice + règle |
 | GET | `/api/cases` | Les 6 cas grammaticaux |
 | GET | `/api/rules?case=GENITIVE` | Rappels de règles (filtre par cas optionnel) |
-| GET | `/api/progress/{userId}` | Progression détaillée |
-| GET | `/api/progress/{userId}/summary` | Résumé de progression par niveau |
+| GET | `/api/progress/me` | Progression détaillée de l'utilisateur connecté |
+| GET | `/api/progress/me/summary` | Résumé de progression par niveau |
 
 La langue est choisie via l'en-tête `Accept-Language: fr` ou `en`.
 Language is selected with the `Accept-Language: fr` or `en` header.
+
+## Sécurité / Security
+
+- Authentification par **JWT (HS256, jjwt)** stateless via Spring Security ; les mots de passe
+  sont hachés avec **BCrypt**. L'identité utilisée pour la progression provient du token, plus
+  du `userId` envoyé par le client.
+- Stateless **JWT (HS256, jjwt)** authentication via Spring Security; passwords are hashed
+  with **BCrypt**. Progress is tied to the identity from the token, not to a client-supplied id.
+- En dev, la clé JWT est dans `backend/src/main/resources/application.properties`
+  (`app.jwt.secret`). **En production**, la définir via la variable d'environnement
+  `APP_JWT_SECRET` (≥ 64 caractères) et servir l'API uniquement en **HTTPS**.
+- In dev the JWT key lives in `application.properties` (`app.jwt.secret`). **In production**
+  set it via the `APP_JWT_SECRET` environment variable (≥ 64 chars) and serve the API over
+  **HTTPS** only.
 
 ## Android
 

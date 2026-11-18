@@ -3,8 +3,8 @@ package com.cyrilsx.russiancases.web;
 import com.cyrilsx.russiancases.service.ProgressService;
 import com.cyrilsx.russiancases.web.dto.ProgressDto;
 import com.cyrilsx.russiancases.web.dto.ProgressSummaryDto;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -21,13 +21,13 @@ public class ProgressController {
         this.progressService = progressService;
     }
 
-    @GetMapping("/{userId}")
-    public List<ProgressDto> getProgress(@PathVariable String userId, Locale locale) {
-        return progressService.getProgress(userId, locale.getLanguage());
+    @GetMapping("/me")
+    public List<ProgressDto> getProgress(Locale locale, Authentication authentication) {
+        return progressService.getProgress(authentication.getName(), locale.getLanguage());
     }
 
-    @GetMapping("/{userId}/summary")
-    public ProgressSummaryDto getSummary(@PathVariable String userId, Locale locale) {
-        return progressService.getSummary(userId, locale.getLanguage());
+    @GetMapping("/me/summary")
+    public ProgressSummaryDto getSummary(Locale locale, Authentication authentication) {
+        return progressService.getSummary(authentication.getName(), locale.getLanguage());
     }
 }

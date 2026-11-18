@@ -65,7 +65,7 @@ public class QuizService {
     }
 
     @Transactional
-    public AnswerResponse answer(Long questionId, AnswerRequest request, String lang) {
+    public AnswerResponse answer(Long questionId, AnswerRequest request, String userId, String lang) {
         QuestionEntity question = findQuestion(questionId);
         boolean correct = request.optionIndex() != null
                 && request.optionIndex() >= 0
@@ -73,10 +73,10 @@ public class QuizService {
                 && request.optionIndex() == question.getCorrectIndex();
 
         ProgressEntity progress = progressRepository
-                .findByUserIdAndQuestionId(request.userId(), question.getId())
+                .findByUserIdAndQuestionId(userId, question.getId())
                 .orElseGet(() -> {
                     ProgressEntity p = new ProgressEntity();
-                    p.setUserId(request.userId());
+                    p.setUserId(userId);
                     p.setQuestion(question);
                     p.setAttempts(0);
                     p.setCorrectCount(0);

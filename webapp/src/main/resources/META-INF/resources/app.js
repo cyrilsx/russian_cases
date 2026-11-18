@@ -1,10 +1,7 @@
 const state = {
     lang: localStorage.getItem("rc-lang") || "fr",
-    userId: localStorage.getItem("rc-user") || (() => {
-        const id = "user-" + Math.random().toString(36).slice(2, 10);
-        localStorage.setItem("rc-user", id);
-        return id;
-    })(),
+    token: localStorage.getItem("rc-token") || null,
+    username: localStorage.getItem("rc-username") || null,
     levels: [],
     questions: [],
     questionIndex: 0,
@@ -24,8 +21,16 @@ const i18n = {
         correct: "Juste ! Bravo !",
         wrong: "Pas tout à fait — réessaie ou demande un indice.",
         questions: "questions",
-        answered: "répondues",
         overall: "Score global",
+        authTitle: "Connexion",
+        username: "Nom d'utilisateur",
+        password: "Mot de passe (6 caractères min.)",
+        login: "Se connecter",
+        register: "Créer un compte",
+        logout: "Se déconnecter",
+        authError: "Échec de connexion : vérifie tes identifiants.",
+        registerError: "Ce nom est déjà pris ou invalide.",
+        loggedInAs: "Connecté : ",
     },
     en: {
         title: "Russian Cases",
@@ -39,8 +44,16 @@ const i18n = {
         correct: "Correct! Well done!",
         wrong: "Not quite — try again or ask for a hint.",
         questions: "questions",
-        answered: "answered",
         overall: "Overall score",
+        authTitle: "Sign in",
+        username: "Username",
+        password: "Password (min. 6 characters)",
+        login: "Sign in",
+        register: "Create account",
+        logout: "Sign out",
+        authError: "Sign-in failed: check your credentials.",
+        registerError: "This username is taken or invalid.",
+        loggedInAs: "Signed in as ",
     },
 };
 
@@ -52,9 +65,14 @@ async function api(path, options = {}) {
         headers: {
             "Accept-Language": state.lang,
             "Content-Type": "application/json",
+            ...(state.token ? { Authorization: "Bearer " + state.token } : {}),
             ...(options.headers || {}),
         },
     });
+    if (response.status === 401 && state.token) {
+        logout();
+        throw new Error("Session expired");
+    }
     if (!response.ok) {
         throw new Error("API error " + response.status);
     }
@@ -75,11 +93,65 @@ function applyLang() {
     el("rule-btn").textContent = t().rule;
     el("next-btn").textContent = t().next;
     el("progress-heading").textContent = t().progress;
+    el("auth-title").textContent = t().authTitle;
+    el("username-label").textContent = t().username;
+    el("password-label").textContent = t().password;
+    el("login-btn").textContent = t().login;
+    el("register-btn").textContent = t().register;
+    el("logout-btn").textContent = t().logout;
     el("lang-fr").classList.toggle("active", state.lang === "fr");
     el("lang-en").classList.toggle("active", state.lang === "en");
     localStorage.setItem("rc-lang", state.lang);
-    loadLevels();
-    loadSummary();
+    if (state.token) {
+        loadLevels();
+        loadSummary();
+    }
+}
+
+function showAuth() {
+    el("auth-section").classList.remove("hidden");
+    el("main-content").classList.add("hidden");
+    el("current-user").classList.add("hidden");
+    el("logout-btn").classList.add("hidden");
+}
+
+function showApp() {
+    el("auth-section").classList.add("hidden");
+    el("main-content").classList.remove("hidden");
+    el("current-user").textContent = t().loggedInAs + state.username;
+    el("current-user").classList.remove("hidden");
+    el("logout-btn").classList.remove("hidden");
+}
+
+async function authenticate(mode) {
+    const feedback = el("auth-feedback");
+    feedback.textContent = "";
+    try {
+        const result = await api("/api/auth/" + mode, {
+            method: "POST",
+            body: JSON.stringify({
+                username: el("username").value.trim(),
+                password: el("password").value,
+            }),
+        });
+        state.token = result.token;
+        state.username = result.username;
+        localStorage.setItem("rc-token", result.token);
+        localStorage.setItem("rc-username", result.username);
+        showApp();
+        applyLang();
+    } catch (e) {
+        feedback.textContent = mode === "register" ? t().registerError : t().authError;
+        feedback.className = "feedback ko";
+    }
+}
+
+function logout() {
+    state.token = null;
+    state.username = null;
+    localStorage.removeItem("rc-token");
+    localStorage.removeItem("rc-username");
+    showAuth();
 }
 
 async function loadLevels() {
@@ -142,7 +214,7 @@ async function submitAnswer() {
     const q = state.questions[state.questionIndex];
     const result = await api("/api/questions/" + q.id + "/answer", {
         method: "POST",
-        body: JSON.stringify({ userId: state.userId, optionIndex: state.selectedOption }),
+        body: JSON.stringify({ optionIndex: state.selectedOption }),
     });
     const feedback = el("feedback");
     if (result.correct) {
@@ -166,7 +238,7 @@ async function submitAnswer() {
 
 async function loadSummary() {
     try {
-        const summary = await api("/api/progress/" + state.userId + "/summary");
+        const summary = await api("/api/progress/me/summary");
         const container = el("progress-summary");
         container.innerHTML = "";
         const overall = document.createElement("div");
@@ -191,6 +263,9 @@ async function loadSummary() {
 
 el("lang-fr").addEventListener("click", () => { state.lang = "fr"; applyLang(); });
 el("lang-en").addEventListener("click", () => { state.lang = "en"; applyLang(); });
+el("login-btn").addEventListener("click", () => authenticate("login"));
+el("register-btn").addEventListener("click", () => authenticate("register"));
+el("logout-btn").addEventListener("click", logout);
 el("back-btn").addEventListener("click", () => {
     el("quiz-section").classList.add("hidden");
     el("levels-section").classList.remove("hidden");
@@ -210,3 +285,8 @@ el("hint-btn").addEventListener("click", () => el("hint-box").classList.toggle("
 el("rule-btn").addEventListener("click", () => el("rule-box").classList.toggle("hidden"));
 
 applyLang();
+if (state.token) {
+    showApp();
+} else {
+    showAuth();
+}

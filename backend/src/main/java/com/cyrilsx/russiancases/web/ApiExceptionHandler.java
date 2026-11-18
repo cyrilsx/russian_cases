@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
 import java.util.Locale;
@@ -34,6 +35,17 @@ public class ApiExceptionHandler {
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, Object>> handleIllegalArgument(IllegalArgumentException ex, Locale locale) {
         return build(HttpStatus.BAD_REQUEST, messageSource.getMessage("error.badrequest", null, locale), locale);
+    }
+
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<Map<String, Object>> handleResponseStatus(ResponseStatusException ex, Locale locale) {
+        HttpStatus status = HttpStatus.valueOf(ex.getStatusCode().value());
+        String key = switch (status) {
+            case CONFLICT -> "error.conflict";
+            case UNAUTHORIZED -> "error.unauthorized";
+            default -> "error.badrequest";
+        };
+        return build(status, messageSource.getMessage(key, null, locale), locale);
     }
 
     private ResponseEntity<Map<String, Object>> build(HttpStatus status, String message, Locale locale) {

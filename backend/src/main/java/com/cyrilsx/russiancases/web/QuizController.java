@@ -5,6 +5,7 @@ import com.cyrilsx.russiancases.web.dto.AnswerRequest;
 import com.cyrilsx.russiancases.web.dto.AnswerResponse;
 import com.cyrilsx.russiancases.web.dto.QuestionDto;
 import jakarta.validation.Valid;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -38,7 +39,8 @@ public class QuizController {
     @PostMapping("/questions/{id}/answer")
     public AnswerResponse answer(@PathVariable Long id,
                                  @Valid @RequestBody AnswerRequest request,
-                                 Locale locale) {
-        return quizService.answer(id, request, locale.getLanguage());
+                                 Locale locale,
+                                 Authentication authentication) {
+        return quizService.answer(id, request, authentication.getName(), locale.getLanguage());
     }
 }

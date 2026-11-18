@@ -9,13 +9,32 @@
 <body>
 <header>
     <h1 id="app-title">Les cas russes</h1>
-    <div class="lang-toggle">
-        <button id="lang-fr" class="lang-btn">FR</button>
-        <button id="lang-en" class="lang-btn">EN</button>
+    <div class="header-right">
+        <span id="current-user" class="hidden"></span>
+        <button id="logout-btn" class="lang-btn hidden">⎋</button>
+        <div class="lang-toggle">
+            <button id="lang-fr" class="lang-btn">FR</button>
+            <button id="lang-en" class="lang-btn">EN</button>
+        </div>
     </div>
 </header>
 
-<main>
+<section id="auth-section" class="hidden">
+    <div class="card auth-card">
+        <h2 id="auth-title">Connexion</h2>
+        <label id="username-label">Nom d'utilisateur</label>
+        <input id="username" type="text" autocomplete="username">
+        <label id="password-label">Mot de passe</label>
+        <input id="password" type="password" autocomplete="current-password">
+        <div class="actions">
+            <button id="login-btn" class="btn primary">Se connecter</button>
+            <button id="register-btn" class="btn secondary">Créer un compte</button>
+        </div>
+        <p id="auth-feedback" class="feedback"></p>
+    </div>
+</section>
+
+<main id="main-content" class="hidden">
     <section id="levels-section">
         <h2 id="levels-heading">Niveaux</h2>
         <div id="levels" class="levels"></div>
