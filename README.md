@@ -62,7 +62,7 @@ header obtained from `/api/auth/register` or `/api/auth/login`.
 | POST | `/api/questions/{id}/answer` | Répondre (`{"optionIndex": 0}`) → résultat + indice + règle |
 | POST | `/api/levels/{id}/sessions` | Démarrer un quiz : sélection aléatoire de `app.quiz.questions-per-session` (8 par défaut) questions → session |
 | GET | `/api/sessions/{id}` | État d'une session de quiz |
-| POST | `/api/sessions/{id}/answer` | Répondre dans une session (`{"questionId": 1, "optionIndex": 0}`) → résultat + indice + règle + `answered`/`total` (409 si déjà répondu, 400 si hors session) |
+| POST | `/api/sessions/{id}/answer` | Répondre dans une session (`{"questionId": 1, "optionIndex": 0}`) → résultat + indice + règle + `answered`/`total` (réessai autorisé après une mauvaise réponse, `answered` compte les questions distinctes ; 400 si hors session) |
 | GET | `/api/cases` | Les 6 cas grammaticaux |
 | GET | `/api/rules?case=GENITIVE` | Rappels de règles (filtre par cas optionnel) |
 | GET | `/api/progress/me` | Progression détaillée de l'utilisateur connecté |

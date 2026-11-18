@@ -218,7 +218,6 @@ async function fetch(path, options = {}) {
         const sess = db.sessions.get(Number(m[1]));
         if (!sess) return resp(404, { message: "Not found" });
         if (!sess.questionIds.includes(body.questionId)) return resp(400, { message: "Not in session" });
-        if (sess.answeredIds.has(body.questionId)) return resp(409, { message: "Already answered" });
         sess.answeredIds.add(body.questionId);
         const q = db.levels.flatMap((l) => l.questions).find((x) => x.id === body.questionId);
         const correct = body.optionIndex === q.correctIndex;
@@ -296,27 +295,17 @@ check(el("progress-bar").getAttribute("aria-valuenow") === "50", "progressbar ar
 opts[0].click();
 el("submit-btn").click();
 await tick(); await tick();
-check(el("toasts").children.length === 1 && el("toasts").children[0].classList.contains("ko"), "re-answering same question -> 409 surfaced as toast, no crash");
-
-el("back-btn").click();
-await tick();
-el("levels").children[0].click();
-await tick(); await tick();
-check(el("question-counter").textContent === "Question 1 / 2", "new session restarts at 'Question 1 / 2'");
-const opts2 = el("options").querySelectorAll(".option");
-opts2[0].click();
-el("submit-btn").click();
-await tick(); await tick();
-check(el("feedback").classList.contains("ok") === true, "correct answer -> ok feedback");
-check(el("next-btn").classList.contains("hidden") === false, "next button shown after correct answer");
-check(opts2.every((o) => o.disabled === true), "options locked after correct answer");
-check(el("progress-bar").getAttribute("aria-valuenow") === "50", "progressbar aria-valuenow=50 after Q1 correct");
+check(el("feedback").classList.contains("ok") === true, "retry after a wrong answer is allowed (no 409) -> ok feedback");
+check(el("progress-bar").getAttribute("aria-valuenow") === "50", "answered counts distinct questions (retry keeps 1/2 -> 50)");
+check(el("next-btn").classList.contains("hidden") === false, "next button shown after correct retry");
+check(opts.every((o) => o.disabled === true), "options locked after correct answer");
 check(document.activeElement === el("next-btn"), "focus moved to next button");
 
 el("next-btn").click();
 await tick();
 check(el("question-counter").textContent === "Question 2 / 2", "counter advanced to 'Question 2 / 2'");
 const opts3 = el("options").querySelectorAll(".option");
+check(opts3.length === 2, "Q2 options rendered");
 opts3[0].click();
 el("submit-btn").click();
 await tick(); await tick();
