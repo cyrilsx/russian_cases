@@ -35,36 +35,55 @@
 </section>
 
 <main id="main-content" class="hidden">
-    <section id="levels-section">
-        <h2 id="levels-heading">Niveaux</h2>
-        <div id="levels" class="levels"></div>
-    </section>
+    <nav id="main-nav">
+        <button id="nav-quiz-btn" class="lang-btn active">Quiz</button>
+        <button id="nav-admin-btn" class="lang-btn hidden">Administration</button>
+    </nav>
 
-    <section id="quiz-section" class="hidden">
-        <button id="back-btn" class="btn secondary">← <span id="back-label">Retour</span></button>
-        <h2 id="level-title"></h2>
-        <p id="level-description" class="description"></p>
-        <div id="progress-bar" class="progress-bar"><div id="progress-fill"></div></div>
-        <div id="question-card" class="card">
-            <p id="question-case" class="case-label"></p>
-            <p id="question-prompt" class="prompt"></p>
-            <div id="options"></div>
-            <div class="actions">
-                <button id="submit-btn" class="btn primary">Valider</button>
-                <button id="hint-btn" class="btn secondary">Indice</button>
-                <button id="rule-btn" class="btn secondary">Rappel de règle</button>
+    <div id="quiz-view">
+        <section id="levels-section">
+            <h2 id="levels-heading">Niveaux</h2>
+            <div id="levels" class="levels"></div>
+        </section>
+
+        <section id="quiz-section" class="hidden">
+            <button id="back-btn" class="btn secondary">← <span id="back-label">Retour</span></button>
+            <h2 id="level-title"></h2>
+            <p id="level-description" class="description"></p>
+            <div id="progress-bar" class="progress-bar"><div id="progress-fill"></div></div>
+            <div id="question-card" class="card">
+                <p id="question-case" class="case-label"></p>
+                <p id="question-prompt" class="prompt"></p>
+                <div id="options"></div>
+                <div class="actions">
+                    <button id="submit-btn" class="btn primary">Valider</button>
+                    <button id="hint-btn" class="btn secondary">Indice</button>
+                    <button id="rule-btn" class="btn secondary">Rappel de règle</button>
+                </div>
+                <p id="feedback" class="feedback"></p>
+                <div id="hint-box" class="hint hidden"></div>
+                <div id="rule-box" class="rule hidden"></div>
             </div>
-            <p id="feedback" class="feedback"></p>
-            <div id="hint-box" class="hint hidden"></div>
-            <div id="rule-box" class="rule hidden"></div>
-        </div>
-        <button id="next-btn" class="btn primary hidden">Question suivante →</button>
-    </section>
+            <button id="next-btn" class="btn primary hidden">Question suivante →</button>
+        </section>
 
-    <section id="progress-section">
-        <h2 id="progress-heading">Ma progression</h2>
-        <div id="progress-summary"></div>
-    </section>
+        <section id="progress-section">
+            <h2 id="progress-heading">Ma progression</h2>
+            <div id="progress-summary"></div>
+        </section>
+    </div>
+
+    <div id="admin-view" class="hidden">
+        <div class="admin-tabs">
+            <button class="lang-btn admin-tab active" data-tab="levels">Niveaux</button>
+            <button class="lang-btn admin-tab" data-tab="questions">Questions</button>
+            <button class="lang-btn admin-tab" data-tab="rules">Règles</button>
+            <button class="lang-btn admin-tab" data-tab="users">Utilisateurs</button>
+            <button class="lang-btn admin-tab" data-tab="progress">Progression</button>
+        </div>
+        <div id="admin-content"></div>
+        <div id="admin-form" class="card hidden"></div>
+    </div>
 </main>
 
 <script src="app.js"></script>

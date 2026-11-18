@@ -229,3 +229,56 @@ main {
 .auth-card .actions {
     margin-top: 0.5rem;
 }
+
+#main-nav {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.admin-tabs {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+}
+
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+    border: 1px solid #dde3f0;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-top: 1rem;
+}
+
+.admin-table th, .admin-table td {
+    text-align: left;
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid #edf0f8;
+    vertical-align: top;
+    font-size: 0.9rem;
+}
+
+.admin-table th {
+    background: #eef1fa;
+}
+
+#admin-form {
+    display: grid;
+    gap: 0.4rem;
+    margin-top: 1rem;
+}
+
+#admin-form textarea, #admin-form input, #admin-form select {
+    padding: 0.5rem 0.7rem;
+    border: 1px solid #cdd5e8;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    font-family: inherit;
+}
+
+#admin-form .actions {
+    margin-top: 0.5rem;
+}
