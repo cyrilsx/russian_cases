@@ -74,6 +74,7 @@
                         <buildTools>${android.build-tools}</buildTools>
                     </sdk>
                     <dex>
+                        <dexCompiler>d8</dexCompiler>
                         <dexArguments>--min-sdk-version=26</dexArguments>
                     </dex>
                 </configuration>
