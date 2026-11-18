@@ -79,6 +79,12 @@ const i18n = {
         all: "Tous",
         saved: "Enregistré.",
         error: "Erreur",
+        skipLink: "Aller au contenu principal",
+        navLabel: "Navigation principale",
+        footer: "Les cas russes — quiz, indices et rappels de règles pour maîtriser les six cas grammaticaux russes.",
+        adminForm: "Formulaire d'administration",
+        confirm: "Confirmer",
+        ok: "OK",
     },
     en: {
         title: "Russian Cases",
@@ -147,6 +153,12 @@ const i18n = {
         all: "All",
         saved: "Saved.",
         error: "Error",
+        skipLink: "Skip to main content",
+        navLabel: "Main navigation",
+        footer: "Russian Cases — quizzes, hints and rule reminders to master the six Russian grammatical cases.",
+        adminForm: "Administration form",
+        confirm: "Confirm",
+        ok: "OK",
     },
 };
 
@@ -205,7 +217,13 @@ function applyLang() {
     el("password-label").textContent = t().password;
     el("login-btn").textContent = t().login;
     el("register-btn").textContent = t().register;
-    el("logout-btn").textContent = t().logout;
+    el("logout-label").textContent = t().logout;
+    el("skip-link").textContent = t().skipLink;
+    el("main-nav").setAttribute("aria-label", t().navLabel);
+    el("admin-view").setAttribute("aria-label", t().admin);
+    el("admin-form").setAttribute("aria-label", t().adminForm);
+    el("footer-text").textContent = t().footer;
+    el("modal-cancel").textContent = t().cancel;
     el("nav-quiz-btn").textContent = t().quiz;
     el("nav-admin-btn").textContent = t().admin;
     document.querySelectorAll(".admin-tab").forEach((b) => {
@@ -278,6 +296,25 @@ function logout() {
     localStorage.removeItem("rc-token");
     localStorage.removeItem("rc-username");
     showAuth();
+}
+
+let modalResolve = null;
+
+function openModal(message, mode) {
+    const dlg = el("modal-dialog");
+    el("modal-message").textContent = message;
+    el("modal-ok").textContent = mode === "confirm" ? t().confirm : t().ok;
+    el("modal-cancel").classList.toggle("hidden", mode !== "confirm");
+    dlg.showModal();
+    return new Promise((resolve) => { modalResolve = resolve; });
+}
+
+function askConfirm(message) {
+    return openModal(message, "confirm");
+}
+
+function showAlert(message) {
+    return openModal(message, "alert");
 }
 
 function setView(view) {
@@ -401,7 +438,7 @@ async function loadSummary() {
 async function renderAdminTab() {
     document.querySelectorAll(".admin-tab").forEach((b) =>
         b.classList.toggle("active", b.dataset.tab === state.adminTab));
-    el("admin-form").classList.add("hidden");
+    el("admin-form").close();
     const content = el("admin-content");
     content.innerHTML = "";
     try {
@@ -441,11 +478,11 @@ async function renderAdminLevels(content) {
     content.querySelectorAll("tbody tr").forEach((tr, i) => {
         tr.querySelector(".act-edit").addEventListener("click", () => levelForm(levels[i]));
         tr.querySelector(".act-del").addEventListener("click", async () => {
-            if (!confirm(t().confirmDelete)) return;
+            if (!(await askConfirm(t().confirmDelete))) return;
             try {
                 await api("/api/admin/levels/" + levels[i].id, { method: "DELETE" });
                 renderAdminTab();
-            } catch (e) { alert(e.message); }
+            } catch (e) { showAlert(e.message); }
         });
     });
 }
@@ -500,11 +537,11 @@ async function renderAdminQuestions(content) {
     content.querySelectorAll("tbody tr").forEach((tr, i) => {
         tr.querySelector(".act-edit").addEventListener("click", () => questionForm(questions[i], levels, rules, cases));
         tr.querySelector(".act-del").addEventListener("click", async () => {
-            if (!confirm(t().confirmDelete)) return;
+            if (!(await askConfirm(t().confirmDelete))) return;
             try {
                 await api("/api/admin/questions/" + questions[i].id, { method: "DELETE" });
                 renderAdminTab();
-            } catch (e) { alert(e.message); }
+            } catch (e) { showAlert(e.message); }
         });
     });
 }
@@ -555,11 +592,11 @@ async function renderAdminRules(content) {
     content.querySelectorAll("tbody tr").forEach((tr, i) => {
         tr.querySelector(".act-edit").addEventListener("click", () => ruleForm(rules[i], rules));
         tr.querySelector(".act-del").addEventListener("click", async () => {
-            if (!confirm(t().confirmDelete)) return;
+            if (!(await askConfirm(t().confirmDelete))) return;
             try {
                 await api("/api/admin/rules/" + rules[i].id, { method: "DELETE" });
                 renderAdminTab();
-            } catch (e) { alert(e.message); }
+            } catch (e) { showAlert(e.message); }
         });
     });
 }
@@ -604,14 +641,14 @@ async function renderAdminUsers(content) {
                     method: "PUT",
                     body: JSON.stringify({ role: e.target.value }),
                 });
-            } catch (err) { alert(err.message); renderAdminTab(); }
+            } catch (err) { showAlert(err.message); renderAdminTab(); }
         });
         tr.querySelector(".act-del").addEventListener("click", async () => {
-            if (!confirm(t().confirmDelete)) return;
+            if (!(await askConfirm(t().confirmDelete))) return;
             try {
                 await api("/api/admin/users/" + users[i].id, { method: "DELETE" });
                 renderAdminTab();
-            } catch (e) { alert(e.message); }
+            } catch (e) { showAlert(e.message); }
         });
     });
 }
@@ -630,18 +667,17 @@ async function renderAdminProgress(content) {
     content.querySelectorAll("tbody tr").forEach((tr) => {
         tr.querySelector(".act-reset").addEventListener("click", async () => {
             const userId = tr.firstElementChild.textContent;
-            if (!confirm(t().confirmReset)) return;
+            if (!(await askConfirm(t().confirmReset))) return;
             try {
                 await api("/api/admin/progress/" + encodeURIComponent(userId), { method: "DELETE" });
                 renderAdminTab();
-            } catch (e) { alert(e.message); }
+            } catch (e) { showAlert(e.message); }
         });
     });
 }
 
 function showAdminForm(fields, onSubmit) {
     const form = el("admin-form");
-    form.classList.remove("hidden");
     let html = "";
     for (const f of fields) {
         html += "<label>" + esc(f.label) + "</label>";
@@ -659,19 +695,20 @@ function showAdminForm(fields, onSubmit) {
         "<button class='btn secondary' id='admin-cancel'>" + esc(t().cancel) + "</button></div>" +
         "<p id='admin-form-msg' class='feedback'></p>";
     form.innerHTML = html;
-    el("admin-cancel").addEventListener("click", () => form.classList.add("hidden"));
+    form.onclick = (e) => { if (e.target === form) form.close(); };
+    el("admin-cancel").addEventListener("click", () => form.close());
     el("admin-save").addEventListener("click", async () => {
         const values = {};
         form.querySelectorAll(".fld").forEach((input) => { values[input.dataset.key] = input.value; });
         try {
             await onSubmit(values);
-            form.classList.add("hidden");
+            form.close();
         } catch (e) {
             el("admin-form-msg").textContent = e.message;
             el("admin-form-msg").className = "feedback ko";
         }
     });
-    form.scrollIntoView({ behavior: "smooth" });
+    form.showModal();
 }
 
 /* ---------------- wiring ---------------- */
@@ -702,6 +739,20 @@ el("next-btn").addEventListener("click", () => {
 });
 el("hint-btn").addEventListener("click", () => el("hint-box").classList.toggle("hidden"));
 el("rule-btn").addEventListener("click", () => el("rule-box").classList.toggle("hidden"));
+el("modal-ok").addEventListener("click", () => {
+    el("modal-dialog").close();
+    if (modalResolve) { modalResolve(true); modalResolve = null; }
+});
+el("modal-cancel").addEventListener("click", () => {
+    el("modal-dialog").close();
+    if (modalResolve) { modalResolve(false); modalResolve = null; }
+});
+el("modal-dialog").addEventListener("click", (e) => {
+    if (e.target === e.currentTarget) {
+        e.currentTarget.close();
+        if (modalResolve) { modalResolve(false); modalResolve = null; }
+    }
+});
 
 applyLang();
 if (state.token) {

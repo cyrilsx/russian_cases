@@ -4,50 +4,64 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Les cas russes / Russian Cases</title>
+    <meta name="description" content="Apprenez et exercez-vous aux six cas grammaticaux russes (nominatif, génitif, datif, accusatif, instrumental, prépositionnel) : quiz par niveau, indices, rappels de règles et suivi de progression. / Learn and practise the six Russian grammatical cases with level-based quizzes, hints, rule reminders and progress tracking.">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="color-scheme" content="light dark">
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#2b3a67">
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#10182b">
+    <meta property="og:title" content="Les cas russes / Russian Cases">
+    <meta property="og:description" content="Quiz par niveau, indices et rappels de règles pour maîtriser les six cas grammaticaux russes. / Level-based quizzes, hints and rule reminders for the six Russian grammatical cases.">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="fr_FR">
+    <meta property="og:locale:alternate" content="en_US">
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="favicon.ico" sizes="32x32">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+<a class="skip-link" id="skip-link" href="#main-content">Aller au contenu principal</a>
 <header>
     <h1 id="app-title">Les cas russes</h1>
     <div class="header-right">
         <span id="current-user" class="hidden"></span>
-        <button id="logout-btn" class="lang-btn hidden">⎋</button>
-        <div class="lang-toggle">
-            <button id="lang-fr" class="lang-btn">FR</button>
-            <button id="lang-en" class="lang-btn">EN</button>
+        <button id="logout-btn" class="lang-btn hidden"><span aria-hidden="true">&#9099;</span><span id="logout-label">Se déconnecter</span></button>
+        <div class="lang-toggle" role="group" aria-label="Langue / Language">
+            <button id="lang-fr" class="lang-btn" lang="fr">FR</button>
+            <button id="lang-en" class="lang-btn" lang="en">EN</button>
         </div>
     </div>
 </header>
 
-<section id="auth-section" class="hidden">
+<section id="auth-section" class="hidden" aria-labelledby="auth-title">
     <div class="card auth-card">
         <h2 id="auth-title">Connexion</h2>
-        <label id="username-label">Nom d'utilisateur</label>
-        <input id="username" type="text" autocomplete="username">
-        <label id="password-label">Mot de passe</label>
-        <input id="password" type="password" autocomplete="current-password">
+        <label id="username-label" for="username">Nom d'utilisateur</label>
+        <input id="username" type="text" autocomplete="username" enterkeyhint="next">
+        <label id="password-label" for="password">Mot de passe</label>
+        <input id="password" type="password" autocomplete="current-password" enterkeyhint="go">
         <div class="actions">
             <button id="login-btn" class="btn primary">Se connecter</button>
             <button id="register-btn" class="btn secondary">Créer un compte</button>
         </div>
-        <p id="auth-feedback" class="feedback"></p>
+        <p id="auth-feedback" class="feedback" role="status" aria-live="polite"></p>
     </div>
 </section>
 
-<main id="main-content" class="hidden">
-    <nav id="main-nav">
+<main id="main-content" class="hidden" tabindex="-1">
+    <nav id="main-nav" aria-label="Navigation principale">
         <button id="nav-quiz-btn" class="lang-btn active">Quiz</button>
         <button id="nav-admin-btn" class="lang-btn hidden">Administration</button>
     </nav>
 
     <div id="quiz-view">
-        <section id="levels-section">
+        <section id="levels-section" aria-labelledby="levels-heading">
             <h2 id="levels-heading">Niveaux</h2>
             <div id="levels" class="levels"></div>
         </section>
 
-        <section id="quiz-section" class="hidden">
-            <button id="back-btn" class="btn secondary">← <span id="back-label">Retour</span></button>
+        <section id="quiz-section" class="hidden" aria-labelledby="level-title">
+            <button id="back-btn" class="btn secondary">&#8592; <span id="back-label">Retour</span></button>
             <h2 id="level-title"></h2>
             <p id="level-description" class="description"></p>
             <div id="progress-bar" class="progress-bar"><div id="progress-fill"></div></div>
@@ -60,32 +74,45 @@
                     <button id="hint-btn" class="btn secondary">Indice</button>
                     <button id="rule-btn" class="btn secondary">Rappel de règle</button>
                 </div>
-                <p id="feedback" class="feedback"></p>
-                <div id="hint-box" class="hint hidden"></div>
-                <div id="rule-box" class="rule hidden"></div>
+                <p id="feedback" class="feedback" role="status" aria-live="polite"></p>
+                <div id="hint-box" class="hint hidden" aria-live="polite"></div>
+                <div id="rule-box" class="rule hidden" aria-live="polite"></div>
             </div>
-            <button id="next-btn" class="btn primary hidden">Question suivante →</button>
+            <button id="next-btn" class="btn primary hidden">Question suivante &#8594;</button>
         </section>
 
-        <section id="progress-section">
+        <section id="progress-section" aria-labelledby="progress-heading">
             <h2 id="progress-heading">Ma progression</h2>
             <div id="progress-summary"></div>
         </section>
     </div>
 
-    <div id="admin-view" class="hidden">
-        <div class="admin-tabs">
-            <button class="lang-btn admin-tab active" data-tab="levels">Niveaux</button>
-            <button class="lang-btn admin-tab" data-tab="questions">Questions</button>
-            <button class="lang-btn admin-tab" data-tab="rules">Règles</button>
-            <button class="lang-btn admin-tab" data-tab="users">Utilisateurs</button>
-            <button class="lang-btn admin-tab" data-tab="progress">Progression</button>
+    <div id="admin-view" class="hidden" aria-label="Administration">
+        <div class="admin-tabs" role="tablist">
+            <button class="lang-btn admin-tab active" data-tab="levels" role="tab">Niveaux</button>
+            <button class="lang-btn admin-tab" data-tab="questions" role="tab">Questions</button>
+            <button class="lang-btn admin-tab" data-tab="rules" role="tab">Règles</button>
+            <button class="lang-btn admin-tab" data-tab="users" role="tab">Utilisateurs</button>
+            <button class="lang-btn admin-tab" data-tab="progress" role="tab">Progression</button>
         </div>
         <div id="admin-content"></div>
-        <div id="admin-form" class="card hidden"></div>
     </div>
 </main>
 
-<script src="app.js"></script>
+<footer>
+    <p id="footer-text">Les cas russes</p>
+</footer>
+
+<dialog id="modal-dialog" aria-labelledby="modal-message">
+    <p id="modal-message"></p>
+    <div class="actions">
+        <button id="modal-ok" class="btn primary">OK</button>
+        <button id="modal-cancel" class="btn secondary">Annuler</button>
+    </div>
+</dialog>
+
+<dialog id="admin-form"></dialog>
+
+<script src="app.js" defer></script>
 </body>
 </html>
