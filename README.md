@@ -89,6 +89,17 @@ export ANDROID_HOME=/chemin/vers/android-sdk   # platform android-29 + build-too
 mvn -pl android package                          # produit android/target/*.apk (JDK 8)
 ```
 
+L'app se connecte à l'API authentifiée (JWT) : écran de connexion/inscription, liste des
+niveaux, quiz avec indice et rappel de règle, progression (`/api/progress/me/summary`).
+Par défaut elle pointe sur `http://10.0.2.2:8080` (localhost de l'hôte vu depuis
+l'émulateur Android) — modifiable dans l'écran de connexion. En production, utiliser
+une URL **HTTPS** (le manifeste autorise le cleartext uniquement pour le dev local).
+
+The app talks to the authenticated API (JWT): sign-in/register screen, level list, quiz
+with hint and rule reminder, progress. It defaults to `http://10.0.2.2:8080` (the host's
+localhost from the Android emulator), editable on the sign-in screen. In production use
+an **HTTPS** URL (the manifest allows cleartext for local dev only).
+
 Le module `android` n'est inclus dans le build que si `ANDROID_HOME` est défini (profil Maven `android`).
 
 ## CI

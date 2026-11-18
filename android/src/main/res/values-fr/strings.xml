@@ -1,5 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Les cas russes</string>
-    <string name="next">Question suivante</string>
+    <string name="server_url">URL du serveur</string>
+    <string name="username">Nom d\'utilisateur</string>
+    <string name="password">Mot de passe (6 caractères min.)</string>
+    <string name="login">Se connecter</string>
+    <string name="register">Créer un compte</string>
+    <string name="logout">Se déconnecter</string>
+    <string name="auth_error">Échec de connexion : vérifie tes identifiants.</string>
+    <string name="username_taken">Ce nom est déjà pris ou invalide.</string>
+    <string name="network_error">Erreur réseau — vérifie l\'URL du serveur.</string>
+    <string name="logged_in_as">Connecté : %1$s</string>
+    <string name="levels">Niveaux</string>
+    <string name="progress">Ma progression</string>
+    <string name="loading">Chargement…</string>
+    <string name="overall_score">Score global : %1$d / %2$d (%3$d %%)</string>
+    <string name="back">Retour</string>
+    <string name="question_counter">Question %1$d / %2$d</string>
+    <string name="submit">Valider</string>
+    <string name="hint">Indice</string>
+    <string name="rule_reminder">Rappel de règle</string>
+    <string name="next_question">Question suivante</string>
+    <string name="correct">Juste ! Bravo !</string>
+    <string name="wrong">Pas tout à fait — réessaie ou demande un indice.</string>
 </resources>

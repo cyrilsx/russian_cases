@@ -1,5 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Russian Cases</string>
-    <string name="next">Next question</string>
+    <string name="default_server_url">http://10.0.2.2:8080</string>
+    <string name="server_url">Server URL</string>
+    <string name="username">Username</string>
+    <string name="password">Password (min. 6 characters)</string>
+    <string name="login">Sign in</string>
+    <string name="register">Create account</string>
+    <string name="logout">Sign out</string>
+    <string name="auth_error">Sign-in failed: check your credentials.</string>
+    <string name="username_taken">This username is taken or invalid.</string>
+    <string name="network_error">Network error — check the server URL.</string>
+    <string name="logged_in_as">Signed in as %1$s</string>
+    <string name="levels">Levels</string>
+    <string name="progress">My progress</string>
+    <string name="loading">Loading…</string>
+    <string name="overall_score">Overall score: %1$d / %2$d (%3$d %%)</string>
+    <string name="back">Back</string>
+    <string name="question_counter">Question %1$d / %2$d</string>
+    <string name="submit">Submit</string>
+    <string name="hint">Hint</string>
+    <string name="rule_reminder">Rule reminder</string>
+    <string name="next_question">Next question</string>
+    <string name="correct">Correct! Well done!</string>
+    <string name="wrong">Not quite — try again or ask for a hint.</string>
 </resources>
