@@ -1,5 +1,6 @@
 const state = {
     lang: localStorage.getItem("rc-lang") || "fr",
+    theme: localStorage.getItem("rc-theme") || "auto",
     token: localStorage.getItem("rc-token") || null,
     username: localStorage.getItem("rc-username") || null,
     role: null,
@@ -85,6 +86,18 @@ const i18n = {
         adminForm: "Formulaire d'administration",
         confirm: "Confirmer",
         ok: "OK",
+        loading: "Chargement…",
+        noLevels: "Aucun niveau disponible pour le moment.",
+        noQuestions: "Aucune question dans ce niveau pour le moment.",
+        loadError: "Impossible de charger les données.",
+        retry: "Réessayer",
+        questionOf: (i, n) => "Question " + i + " / " + n,
+        optionsLabel: "Réponses possibles",
+        progressLabel: "Progression dans le niveau",
+        theme: "Thème",
+        themeAuto: "automatique",
+        themeLight: "clair",
+        themeDark: "sombre",
     },
     en: {
         title: "Russian Cases",
@@ -159,6 +172,18 @@ const i18n = {
         adminForm: "Administration form",
         confirm: "Confirm",
         ok: "OK",
+        loading: "Loading…",
+        noLevels: "No levels available yet.",
+        noQuestions: "No questions in this level yet.",
+        loadError: "Could not load the data.",
+        retry: "Retry",
+        questionOf: (i, n) => "Question " + i + " / " + n,
+        optionsLabel: "Possible answers",
+        progressLabel: "Progress in this level",
+        theme: "Theme",
+        themeAuto: "auto",
+        themeLight: "light",
+        themeDark: "dark",
     },
 };
 
@@ -224,6 +249,11 @@ function applyLang() {
     el("admin-form").setAttribute("aria-label", t().adminForm);
     el("footer-text").textContent = t().footer;
     el("modal-cancel").textContent = t().cancel;
+    el("options").setAttribute("aria-label", t().optionsLabel);
+    el("progress-bar").setAttribute("aria-label", t().progressLabel);
+    if (!el("quiz-section").classList.contains("hidden") && state.questions.length) {
+        el("question-counter").textContent = t().questionOf(state.questionIndex + 1, state.questions.length);
+    }
     el("nav-quiz-btn").textContent = t().quiz;
     el("nav-admin-btn").textContent = t().admin;
     document.querySelectorAll(".admin-tab").forEach((b) => {
@@ -317,6 +347,39 @@ function showAlert(message) {
     return openModal(message, "alert");
 }
 
+function applyTheme(theme) {
+    state.theme = theme;
+    localStorage.setItem("rc-theme", theme);
+    if (theme === "auto") document.documentElement.removeAttribute("data-theme");
+    else document.documentElement.setAttribute("data-theme", theme);
+    const icons = { auto: "◐", light: "☀", dark: "🌙" };
+    el("theme-icon").textContent = icons[theme];
+    const label = t()["theme" + theme.charAt(0).toUpperCase() + theme.slice(1)];
+    el("theme-btn").setAttribute("aria-label", t().theme + " : " + label);
+}
+
+function cycleTheme() {
+    const order = ["auto", "light", "dark"];
+    applyTheme(order[(order.indexOf(state.theme) + 1) % order.length]);
+}
+
+function toast(message, kind) {
+    const item = document.createElement("div");
+    item.className = "toast" + (kind ? " " + kind : "");
+    item.textContent = message;
+    el("toasts").appendChild(item);
+    requestAnimationFrame(() => item.classList.add("show"));
+    setTimeout(() => {
+        item.classList.remove("show");
+        setTimeout(() => item.remove(), 250);
+    }, 3500);
+}
+
+function setLangAuto(node, text) {
+    if (/[\u0400-\u04FF]/.test(text)) node.setAttribute("lang", "ru");
+    else node.removeAttribute("lang");
+}
+
 function setView(view) {
     state.view = view;
     el("nav-quiz-btn").classList.toggle("active", view === "quiz");
@@ -327,12 +390,27 @@ function setView(view) {
 }
 
 async function loadLevels() {
-    state.levels = await api("/api/levels");
     const container = el("levels");
+    container.innerHTML = "<p class='loading' role='status'>" + esc(t().loading) + "</p>";
+    let levels;
+    try {
+        levels = await api("/api/levels");
+    } catch (e) {
+        container.innerHTML = "<p class='feedback ko' role='alert'>" + esc(t().loadError) + "</p>" +
+            "<button class='btn secondary' id='levels-retry'>" + esc(t().retry) + "</button>";
+        el("levels-retry").addEventListener("click", loadLevels);
+        return;
+    }
+    state.levels = levels;
     container.innerHTML = "";
-    for (const level of state.levels) {
+    if (!levels.length) {
+        container.innerHTML = "<p class='empty'>" + esc(t().noLevels) + "</p>";
+        return;
+    }
+    for (const level of levels) {
         const card = document.createElement("button");
         card.className = "level-card";
+        card.type = "button";
         card.innerHTML = "<h3></h3><p class='description'></p><small></small>";
         card.querySelector("h3").textContent = level.title;
         card.querySelector(".description").textContent = level.description;
@@ -343,7 +421,18 @@ async function loadLevels() {
 }
 
 async function startLevel(level) {
-    state.questions = await api("/api/levels/" + level.id + "/questions");
+    let questions;
+    try {
+        questions = await api("/api/levels/" + level.id + "/questions");
+    } catch (e) {
+        toast(e.message, "ko");
+        return;
+    }
+    if (!questions.length) {
+        toast(t().noQuestions, "ko");
+        return;
+    }
+    state.questions = questions;
     state.questionIndex = 0;
     el("levels-section").classList.add("hidden");
     el("quiz-section").classList.remove("hidden");
@@ -356,27 +445,47 @@ function showQuestion() {
     const q = state.questions[state.questionIndex];
     state.selectedOption = null;
     el("question-case").textContent = q.caseLabel;
+    setLangAuto(el("question-case"), q.caseLabel);
     el("question-prompt").textContent = q.prompt;
+    setLangAuto(el("question-prompt"), q.prompt);
     el("feedback").textContent = "";
     el("feedback").className = "feedback";
     el("hint-box").classList.add("hidden");
     el("rule-box").classList.add("hidden");
     el("next-btn").classList.add("hidden");
     el("submit-btn").classList.remove("hidden");
+    el("submit-btn").disabled = true;
+    el("question-counter").textContent = t().questionOf(state.questionIndex + 1, state.questions.length);
     const options = el("options");
     options.innerHTML = "";
     q.options.forEach((option, index) => {
         const btn = document.createElement("button");
         btn.className = "option";
+        btn.type = "button";
+        btn.setAttribute("role", "radio");
+        btn.setAttribute("aria-checked", "false");
         btn.textContent = option;
-        btn.addEventListener("click", () => {
-            state.selectedOption = index;
-            options.querySelectorAll(".option").forEach((o) => o.classList.remove("selected"));
-            btn.classList.add("selected");
-        });
+        setLangAuto(btn, option);
+        btn.addEventListener("click", () => selectOption(index));
         options.appendChild(btn);
     });
-    el("progress-fill").style.width = (100 * state.questionIndex / state.questions.length) + "%";
+    updateProgress(false);
+}
+
+function selectOption(index) {
+    state.selectedOption = index;
+    el("options").querySelectorAll(".option").forEach((o, i) => {
+        o.classList.toggle("selected", i === index);
+        o.setAttribute("aria-checked", i === index ? "true" : "false");
+    });
+    el("submit-btn").disabled = false;
+}
+
+function updateProgress(completed) {
+    const total = state.questions.length || 1;
+    const pct = Math.min(100, Math.round(100 * (state.questionIndex + (completed ? 1 : 0)) / total));
+    el("progress-fill").style.width = pct + "%";
+    el("progress-bar").setAttribute("aria-valuenow", String(pct));
 }
 
 async function submitAnswer() {
@@ -393,18 +502,22 @@ async function submitAnswer() {
         feedback.textContent = t().correct;
         feedback.classList.add("ok");
         el("options").children[result.correctIndex].classList.add("correct");
+        el("options").querySelectorAll(".option").forEach((o) => { o.disabled = true; });
         el("submit-btn").classList.add("hidden");
         el("next-btn").classList.remove("hidden");
+        el("next-btn").focus();
     } else {
         feedback.textContent = t().wrong;
         feedback.classList.add("ko");
         el("options").children[state.selectedOption].classList.add("wrong");
     }
     el("hint-box").textContent = result.hint;
+    setLangAuto(el("hint-box"), result.hint);
     if (result.ruleTitle) {
         el("rule-box").textContent = result.ruleTitle + "\n\n" + result.ruleContent;
+        setLangAuto(el("rule-box"), result.ruleTitle + result.ruleContent);
     }
-    el("progress-fill").style.width = (100 * (state.questionIndex + 1) / state.questions.length) + "%";
+    updateProgress(true);
     loadSummary();
 }
 
@@ -703,6 +816,7 @@ function showAdminForm(fields, onSubmit) {
         try {
             await onSubmit(values);
             form.close();
+            toast(t().saved, "ok");
         } catch (e) {
             el("admin-form-msg").textContent = e.message;
             el("admin-form-msg").className = "feedback ko";
@@ -753,7 +867,23 @@ el("modal-dialog").addEventListener("click", (e) => {
         if (modalResolve) { modalResolve(false); modalResolve = null; }
     }
 });
+el("theme-btn").addEventListener("click", cycleTheme);
+el("options").addEventListener("keydown", (e) => {
+    if (!["ArrowDown", "ArrowRight", "ArrowUp", "ArrowLeft"].includes(e.key)) return;
+    const opts = Array.from(el("options").querySelectorAll(".option"));
+    if (!opts.length) return;
+    const cur = opts.indexOf(document.activeElement);
+    e.preventDefault();
+    let next;
+    if (e.key === "ArrowDown" || e.key === "ArrowRight") next = cur < 0 ? 0 : (cur + 1) % opts.length;
+    else next = cur < 0 ? opts.length - 1 : (cur - 1 + opts.length) % opts.length;
+    opts[next].focus();
+    selectOption(next);
+});
+[el("username"), el("password")].forEach((input) =>
+    input.addEventListener("keydown", (e) => { if (e.key === "Enter") authenticate("login"); }));
 
+applyTheme(state.theme);
 applyLang();
 if (state.token) {
     showApp();

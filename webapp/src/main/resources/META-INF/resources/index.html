@@ -17,6 +17,7 @@
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
     <link rel="icon" href="favicon.ico" sizes="32x32">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <script>try{var th=localStorage.getItem("rc-theme");if(th&&th!=="auto"){document.documentElement.setAttribute("data-theme",th)}}catch(e){}</script>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -26,6 +27,7 @@
     <div class="header-right">
         <span id="current-user" class="hidden"></span>
         <button id="logout-btn" class="lang-btn hidden"><span aria-hidden="true">&#9099;</span><span id="logout-label">Se déconnecter</span></button>
+        <button id="theme-btn" class="lang-btn" aria-label="Thème"><span aria-hidden="true" id="theme-icon">◐</span></button>
         <div class="lang-toggle" role="group" aria-label="Langue / Language">
             <button id="lang-fr" class="lang-btn" lang="fr">FR</button>
             <button id="lang-en" class="lang-btn" lang="en">EN</button>
@@ -64,13 +66,14 @@
             <button id="back-btn" class="btn secondary">&#8592; <span id="back-label">Retour</span></button>
             <h2 id="level-title"></h2>
             <p id="level-description" class="description"></p>
-            <div id="progress-bar" class="progress-bar"><div id="progress-fill"></div></div>
+            <div id="progress-bar" class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="progress-fill"></div></div>
+            <p id="question-counter" class="counter"></p>
             <div id="question-card" class="card">
                 <p id="question-case" class="case-label"></p>
                 <p id="question-prompt" class="prompt"></p>
-                <div id="options"></div>
+                <div id="options" role="radiogroup"></div>
                 <div class="actions">
-                    <button id="submit-btn" class="btn primary">Valider</button>
+                    <button id="submit-btn" class="btn primary" disabled>Valider</button>
                     <button id="hint-btn" class="btn secondary">Indice</button>
                     <button id="rule-btn" class="btn secondary">Rappel de règle</button>
                 </div>
@@ -112,6 +115,8 @@
 </dialog>
 
 <dialog id="admin-form"></dialog>
+
+<div id="toasts" class="toasts" aria-live="polite"></div>
 
 <script src="app.js" defer></script>
 </body>

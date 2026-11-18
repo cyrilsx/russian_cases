@@ -693,3 +693,57 @@ dialog::backdrop {
     align-items: center;
     gap: var(--space-1);
 }
+
+.btn:disabled,
+.option:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.counter {
+    margin: var(--space-2) 0 0;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+}
+
+.loading,
+.empty {
+    color: var(--text-muted);
+}
+
+.toasts {
+    position: fixed;
+    bottom: var(--space-4);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 50;
+    display: grid;
+    gap: var(--space-2);
+    width: min(100% - 2rem, 24rem);
+}
+
+.toast {
+    padding: var(--space-3) var(--space-4);
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-left-width: 4px;
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-md);
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
+}
+
+.toast.show {
+    opacity: 1;
+    transform: none;
+}
+
+.toast.ok {
+    border-left-color: var(--ok);
+}
+
+.toast.ko {
+    border-left-color: var(--ko);
+}
