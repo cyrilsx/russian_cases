@@ -12,6 +12,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
+import org.springframework.security.web.header.writers.XXssProtectionHeaderWriter;
 import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
@@ -37,7 +39,8 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/register", "/api/auth/login").permitAll()
-                        .requestMatchers("/", "/index.html", "/app.js", "/styles.css", "/favicon.ico", "/error").permitAll()
+                        .requestMatchers("/", "/index.html", "/app.js", "/styles.css", "/theme-init.js",
+                                "/favicon.ico", "/favicon.svg", "/apple-touch-icon.png", "/robots.txt", "/error").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .exceptionHandling(exceptions -> exceptions
@@ -45,6 +48,14 @@ public class SecurityConfig {
                                 writeError(response, request, HttpServletResponse.SC_UNAUTHORIZED, "error.authrequired"))
                         .accessDeniedHandler((request, response, exception) ->
                                 writeError(response, request, HttpServletResponse.SC_FORBIDDEN, "error.forbidden")))
+                .headers(headers -> headers
+                        .contentSecurityPolicy(csp -> csp.policyDirectives(
+                                "default-src 'self'; frame-ancestors 'none'; base-uri 'self'; object-src 'none'; img-src 'self'"))
+                        .frameOptions(frame -> frame.deny())
+                        .httpStrictTransportSecurity(hsts -> hsts.maxAgeInSeconds(31536000).includeSubDomains(true))
+                        .referrerPolicy(rp -> rp.policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
+                        .permissionsPolicy(pp -> pp.policy("camera=(), microphone=(), geolocation=()"))
+                        .xssProtection(xss -> xss.headerValue(XXssProtectionHeaderWriter.HeaderValue.DISABLED)))
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
