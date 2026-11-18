@@ -107,7 +107,7 @@ class ApiIntegrationTests {
                 new HttpEntity<>(authHeaders(registerUser(), Locale.ENGLISH)), LevelDto[].class);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         LevelDto[] levels = response.getBody();
-        assertThat(levels).hasSize(3);
+        assertThat(levels).hasSize(5);
         assertThat(levels[0].levelNumber()).isEqualTo(1);
         assertThat(levels[0].questionCount()).isGreaterThan(0);
     }
