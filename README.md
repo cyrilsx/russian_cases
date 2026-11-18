@@ -106,7 +106,10 @@ Language is selected with the `Accept-Language: fr` or `en` header.
 ## Android
 
 ```bash
-export ANDROID_HOME=/chemin/vers/android-sdk   # platform android-29 + build-tools 30.0.3
+# SDK autonome recommandé (pas le dossier /usr/share/android-studio, non modifiable sans root) :
+export ANDROID_HOME=$HOME/Android/Sdk
+"$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-29" "build-tools;30.0.3"
+# le build crée lui-même $ANDROID_HOME/tools/source.properties (shim exigé par android-maven-plugin)
 mvn -pl android package                          # produit android/target/*.apk (JDK 8)
 ```
 
