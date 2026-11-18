@@ -13,4 +13,16 @@
     <artifactId>russian-cases-webapp</artifactId>
     <name>russian-cases-webapp</name>
     <description>Static webapp (vanilla HTML/CSS/JS, fr/en) packaged as a jar and served by the backend from META-INF/resources</description>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>

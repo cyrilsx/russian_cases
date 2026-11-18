@@ -34,11 +34,15 @@ russian-cases/
 ## Lancer le backend + la webapp / Run backend + webapp
 
 ```bash
-mvn -pl webapp,backend spring-boot:run
+mvn install -DskipTests                  # une fois : construit et installe tous les modules (dont le jar webapp)
+mvn -pl backend spring-boot:run          # démarre le backend sur http://localhost:8080
 # puis ouvrir http://localhost:8080
 ```
 
 The webapp is served by the backend at [http://localhost:8080](http://localhost:8080).
+Do not run `mvn spring-boot:run` on the root or with `-pl webapp,backend` without the
+install step: the `webapp` module has no main class (the plugin is configured to skip it),
+and the backend needs the installed webapp jar on its classpath.
 
 ## API
 
