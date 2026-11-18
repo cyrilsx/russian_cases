@@ -32,9 +32,9 @@ jobs:
           cache: maven
       - uses: android-actions/setup-android@v3
       - name: Accept SDK licenses
-        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses
+        run: 'yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses'
       - name: Install SDK packages
-        run: "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-29" "build-tools;30.0.3"
+        run: '"$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-29" "build-tools;30.0.3"'
       - name: Shim legacy tools/source.properties required by android-maven-plugin
         run: |
           mkdir -p "$ANDROID_HOME/tools"
