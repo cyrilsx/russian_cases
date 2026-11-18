@@ -4,9 +4,11 @@ const state = {
     username: localStorage.getItem("rc-username") || null,
     role: null,
     levels: [],
+    session: null,
     questions: [],
     questionIndex: 0,
     selectedOption: null,
+    sessionCorrect: 0,
     view: "quiz",
     adminTab: "levels",
 };
@@ -79,6 +81,7 @@ const i18n = {
         all: "Tous",
         saved: "Enregistré.",
         error: "Erreur",
+        quizDone: "Quiz terminé : %1$d bonnes réponses sur %2$d !",
     },
     en: {
         title: "Russian Cases",
@@ -147,6 +150,7 @@ const i18n = {
         all: "All",
         saved: "Saved.",
         error: "Error",
+        quizDone: "Quiz done: %1$d correct out of %2$d!",
     },
 };
 
@@ -306,8 +310,10 @@ async function loadLevels() {
 }
 
 async function startLevel(level) {
-    state.questions = await api("/api/levels/" + level.id + "/questions");
+    state.session = await api("/api/levels/" + level.id + "/sessions", { method: "POST" });
+    state.questions = state.session.questions;
     state.questionIndex = 0;
+    state.sessionCorrect = 0;
     el("levels-section").classList.add("hidden");
     el("quiz-section").classList.remove("hidden");
     el("level-title").textContent = level.title;
@@ -347,13 +353,16 @@ async function submitAnswer() {
         return;
     }
     const q = state.questions[state.questionIndex];
-    const result = await api("/api/questions/" + q.id + "/answer", {
+    const result = await api("/api/sessions/" + state.session.id + "/answer", {
         method: "POST",
-        body: JSON.stringify({ optionIndex: state.selectedOption }),
+        body: JSON.stringify({ questionId: q.id, optionIndex: state.selectedOption }),
     });
     const feedback = el("feedback");
     if (result.correct) {
-        feedback.textContent = t().correct;
+        state.sessionCorrect++;
+        feedback.textContent = result.answered === result.total
+            ? t().quizDone.replace("%1$d", state.sessionCorrect).replace("%2$d", result.total)
+            : t().correct;
         feedback.classList.add("ok");
         el("options").children[result.correctIndex].classList.add("correct");
         el("submit-btn").classList.add("hidden");
@@ -367,7 +376,7 @@ async function submitAnswer() {
     if (result.ruleTitle) {
         el("rule-box").textContent = result.ruleTitle + "\n\n" + result.ruleContent;
     }
-    el("progress-fill").style.width = (100 * (state.questionIndex + 1) / state.questions.length) + "%";
+    el("progress-fill").style.width = (100 * result.answered / result.total) + "%";
     loadSummary();
 }
 
@@ -695,9 +704,11 @@ el("next-btn").addEventListener("click", () => {
         state.questionIndex++;
         showQuestion();
     } else {
+        state.session = null;
         el("quiz-section").classList.add("hidden");
         el("levels-section").classList.remove("hidden");
         loadLevels();
+        loadSummary();
     }
 });
 el("hint-btn").addEventListener("click", () => el("hint-box").classList.toggle("hidden"));

@@ -4,6 +4,7 @@ import com.cyrilsx.russiancases.android.model.AnswerResult;
 import com.cyrilsx.russiancases.android.model.Level;
 import com.cyrilsx.russiancases.android.model.ProgressSummary;
 import com.cyrilsx.russiancases.android.model.Question;
+import com.cyrilsx.russiancases.android.model.QuizSession;
 import com.cyrilsx.russiancases.android.model.Rule;
 
 import org.json.JSONArray;
@@ -81,6 +82,18 @@ public class ApiClient {
         JSONObject body = new JSONObject();
         body.put("optionIndex", optionIndex);
         return AnswerResult.fromJson(new JSONObject(request("POST", "/api/questions/" + questionId + "/answer", body.toString())));
+    }
+
+    public QuizSession createSession(long levelId) throws ApiException, IOException, JSONException {
+        return QuizSession.fromJson(new JSONObject(request("POST", "/api/levels/" + levelId + "/sessions", null)));
+    }
+
+    public AnswerResult answerInSession(long sessionId, long questionId, int optionIndex)
+            throws ApiException, IOException, JSONException {
+        JSONObject body = new JSONObject();
+        body.put("questionId", questionId);
+        body.put("optionIndex", optionIndex);
+        return AnswerResult.fromJson(new JSONObject(request("POST", "/api/sessions/" + sessionId + "/answer", body.toString())));
     }
 
     public Rule getRule(String caseName) throws ApiException, IOException, JSONException {

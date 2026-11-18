@@ -57,9 +57,12 @@ header obtained from `/api/auth/register` or `/api/auth/login`.
 | POST | `/api/auth/login` | Se connecter → `200 {"token", "username"}` (401 si invalide) |
 | GET | `/api/auth/me` | Utilisateur courant |
 | GET | `/api/levels` | Liste des niveaux (avec nombre de questions) |
-| GET | `/api/levels/{id}/questions` | Questions d'un niveau |
+| GET | `/api/levels/{id}/questions` | Toutes les questions d'un niveau (admin) |
 | GET | `/api/questions/{id}` | Une question |
 | POST | `/api/questions/{id}/answer` | Répondre (`{"optionIndex": 0}`) → résultat + indice + règle |
+| POST | `/api/levels/{id}/sessions` | Démarrer un quiz : sélection aléatoire de `app.quiz.questions-per-session` (8 par défaut) questions → session |
+| GET | `/api/sessions/{id}` | État d'une session de quiz |
+| POST | `/api/sessions/{id}/answer` | Répondre dans une session (`{"questionId": 1, "optionIndex": 0}`) → résultat + indice + règle + `answered`/`total` (409 si déjà répondu, 400 si hors session) |
 | GET | `/api/cases` | Les 6 cas grammaticaux |
 | GET | `/api/rules?case=GENITIVE` | Rappels de règles (filtre par cas optionnel) |
 | GET | `/api/progress/me` | Progression détaillée de l'utilisateur connecté |
