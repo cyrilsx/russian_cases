@@ -7,13 +7,13 @@ data class ProgressSummary(
     val totalAttempts: Long,
     val totalCorrect: Long,
     val percent: Int,
-    val levels: List<LevelProgress>,
+    val levels: List<LevelProgress>
 ) {
     data class LevelProgress(
         val title: String,
         val correct: Long,
         val total: Long,
-        val percent: Int,
+        val percent: Int
     )
 
     companion object {
@@ -27,14 +27,14 @@ data class ProgressSummary(
                     title = l.getString("title"),
                     correct = l.getLong("correct"),
                     total = l.getLong("total"),
-                    percent = l.getInt("percent"),
+                    percent = l.getInt("percent")
                 )
             }
             return ProgressSummary(
                 totalAttempts = json.getLong("totalAttempts"),
                 totalCorrect = json.getLong("totalCorrect"),
                 percent = json.getInt("percent"),
-                levels = levels,
+                levels = levels
             )
         }
     }

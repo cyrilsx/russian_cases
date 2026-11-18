@@ -10,7 +10,7 @@ data class AnswerResult(
     val ruleTitle: String?,
     val ruleContent: String?,
     val answered: Int,
-    val total: Int,
+    val total: Int
 ) {
     companion object {
         @JvmStatic
@@ -22,7 +22,7 @@ data class AnswerResult(
             ruleTitle = json.optString("ruleTitle", null),
             ruleContent = json.optString("ruleContent", null),
             answered = json.optInt("answered", 0),
-            total = json.optInt("total", 0),
+            total = json.optInt("total", 0)
         )
     }
 }

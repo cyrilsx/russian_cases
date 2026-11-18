@@ -9,7 +9,7 @@ data class Question(
     val caseLabel: String,
     val prompt: String,
     val options: List<String>,
-    val hint: String,
+    val hint: String
 ) {
     companion object {
         @JvmStatic
@@ -23,7 +23,7 @@ data class Question(
                 caseLabel = json.getString("caseLabel"),
                 prompt = json.getString("prompt"),
                 options = options,
-                hint = json.optString("hint"),
+                hint = json.optString("hint")
             )
         }
     }

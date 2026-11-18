@@ -6,7 +6,7 @@ import org.json.JSONObject
 data class Rule(
     val caseLabel: String,
     val title: String,
-    val content: String,
+    val content: String
 ) {
     companion object {
         @JvmStatic
@@ -14,7 +14,7 @@ data class Rule(
         fun fromJson(json: JSONObject): Rule = Rule(
             caseLabel = json.getString("caseLabel"),
             title = json.getString("title"),
-            content = json.getString("content"),
+            content = json.getString("content")
         )
     }
 }

@@ -7,7 +7,7 @@ data class QuizSession(
     val id: Long,
     val total: Int,
     val answered: Int,
-    val questions: List<Question>,
+    val questions: List<Question>
 ) {
     companion object {
         @JvmStatic
@@ -19,7 +19,7 @@ data class QuizSession(
                 id = json.getLong("id"),
                 total = json.getInt("total"),
                 answered = json.getInt("answered"),
-                questions = questions,
+                questions = questions
             )
         }
     }
