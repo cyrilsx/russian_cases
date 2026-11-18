@@ -21,23 +21,25 @@ jobs:
         run: mvn -B -ntp verify -pl webapp,backend
 
   android:
-    name: Android APK (JDK 8 + Android SDK 29)
+    name: Android APK (SDK setup on JDK 21, build on JDK 8)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: "8"
+          java-version: "21"
           cache: maven
       - uses: android-actions/setup-android@v3
-      - name: Accept SDK licenses
-        run: 'yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses'
       - name: Install SDK packages
         run: '"$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-29" "build-tools;30.0.3"'
       - name: Shim legacy tools/source.properties required by android-maven-plugin
         run: |
           mkdir -p "$ANDROID_HOME/tools"
           printf 'Pkg.Revision=26.1.1\n' > "$ANDROID_HOME/tools/source.properties"
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "8"
       - name: Build the APK
         run: mvn -B -ntp verify -pl android
