@@ -50,10 +50,6 @@ jobs:
         run: |
           SDKMGR="$(ls -d "$ANDROID_HOME"/cmdline-tools/*/bin/sdkmanager | sort -V | tail -1)"
           "$SDKMGR" "platforms;android-29" "build-tools;30.0.3"
-      - name: Shim legacy tools/source.properties required by android-maven-plugin
-        run: |
-          mkdir -p "$ANDROID_HOME/tools"
-          printf 'Pkg.Revision=26.1.1\n' > "$ANDROID_HOME/tools/source.properties"
       - uses: actions/setup-java@v6
         with:
           distribution: temurin
