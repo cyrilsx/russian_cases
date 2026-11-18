@@ -23,4 +23,5 @@
     <string name="next_question">Question suivante</string>
     <string name="correct">Juste ! Bravo !</string>
     <string name="wrong">Pas tout à fait — réessaie ou demande un indice.</string>
+    <string name="quiz_done">Quiz terminé : %1$d / %2$d</string>
 </resources>

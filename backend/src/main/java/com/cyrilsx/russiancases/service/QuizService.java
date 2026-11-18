@@ -122,7 +122,7 @@ public class QuizService {
                 .orElseThrow(() -> new ResourceNotFoundException("question", id));
     }
 
-    private static QuestionDto toDto(QuestionEntity q, String lang) {
+    static QuestionDto toDto(QuestionEntity q, String lang) {
         boolean fr = "fr".equals(lang);
         return new QuestionDto(
                 q.getId(),

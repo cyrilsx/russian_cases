@@ -11,6 +11,7 @@ import android.widget.TextView;
 
 import com.cyrilsx.russiancases.android.model.AnswerResult;
 import com.cyrilsx.russiancases.android.model.Question;
+import com.cyrilsx.russiancases.android.model.QuizSession;
 import com.cyrilsx.russiancases.android.model.Rule;
 
 import java.util.ArrayList;
@@ -19,9 +20,11 @@ import java.util.List;
 public class QuizActivity extends Activity {
 
     private ApiClient api;
+    private QuizSession session;
     private List<Question> questions = new ArrayList<>();
     private int index = 0;
     private boolean answered = false;
+    private int correctCount = 0;
 
     private TextView titleText;
     private TextView counterText;
@@ -99,20 +102,21 @@ public class QuizActivity extends Activity {
             }
         });
 
-        loadQuestions();
+        loadSession();
     }
 
-    private void loadQuestions() {
+    private void loadSession() {
         final long levelId = getIntent().getLongExtra("level_id", 0);
         new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
-                    final List<Question> loaded = api.getQuestions(levelId);
+                    final QuizSession loaded = api.createSession(levelId);
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            questions = loaded;
+                            session = loaded;
+                            questions = loaded.questions;
                             if (!questions.isEmpty()) {
                                 showQuestion();
                             } else {
@@ -169,11 +173,17 @@ public class QuizActivity extends Activity {
             @Override
             public void run() {
                 try {
-                    final AnswerResult result = api.answer(q.id, selected);
+                    final AnswerResult result = api.answerInSession(session.id, q.id, selected);
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            feedbackText.setText(result.correct ? R.string.correct : R.string.wrong);
+                            if (result.correct) {
+                                correctCount++;
+                            }
+                            String base = getString(result.correct ? R.string.correct : R.string.wrong);
+                            feedbackText.setText(result.answered == result.total
+                                    ? base + " " + getString(R.string.quiz_done, correctCount, result.total)
+                                    : base);
                             hintText.setText(result.hint);
                             if (result.ruleTitle != null) {
                                 ruleText.setText(result.ruleTitle + "\n\n" + result.ruleContent);

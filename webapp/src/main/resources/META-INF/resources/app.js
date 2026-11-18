@@ -5,9 +5,11 @@ const state = {
     username: localStorage.getItem("rc-username") || null,
     role: null,
     levels: [],
+    session: null,
     questions: [],
     questionIndex: 0,
     selectedOption: null,
+    sessionCorrect: 0,
     view: "quiz",
     adminTab: "levels",
 };
@@ -98,6 +100,7 @@ const i18n = {
         themeAuto: "automatique",
         themeLight: "clair",
         themeDark: "sombre",
+        quizDone: "Quiz terminé : %1$d bonnes réponses sur %2$d !",
     },
     en: {
         title: "Russian Cases",
@@ -184,6 +187,7 @@ const i18n = {
         themeAuto: "auto",
         themeLight: "light",
         themeDark: "dark",
+        quizDone: "Quiz done: %1$d correct out of %2$d!",
     },
 };
 
@@ -421,19 +425,22 @@ async function loadLevels() {
 }
 
 async function startLevel(level) {
-    let questions;
+    let session;
     try {
-        questions = await api("/api/levels/" + level.id + "/questions");
+        session = await api("/api/levels/" + level.id + "/sessions", { method: "POST" });
     } catch (e) {
         toast(e.message, "ko");
         return;
     }
+    const questions = session.questions || [];
     if (!questions.length) {
         toast(t().noQuestions, "ko");
         return;
     }
+    state.session = session;
     state.questions = questions;
     state.questionIndex = 0;
+    state.sessionCorrect = 0;
     el("levels-section").classList.add("hidden");
     el("quiz-section").classList.remove("hidden");
     el("level-title").textContent = level.title;
@@ -481,9 +488,14 @@ function selectOption(index) {
     el("submit-btn").disabled = false;
 }
 
-function updateProgress(completed) {
-    const total = state.questions.length || 1;
-    const pct = Math.min(100, Math.round(100 * (state.questionIndex + (completed ? 1 : 0)) / total));
+function updateProgress(completed, answered, total) {
+    let pct;
+    if (answered != null && total) {
+        pct = Math.min(100, Math.round(100 * answered / total));
+    } else {
+        const t = state.questions.length || 1;
+        pct = Math.min(100, Math.round(100 * (state.questionIndex + (completed ? 1 : 0)) / t));
+    }
     el("progress-fill").style.width = pct + "%";
     el("progress-bar").setAttribute("aria-valuenow", String(pct));
 }
@@ -493,13 +505,22 @@ async function submitAnswer() {
         return;
     }
     const q = state.questions[state.questionIndex];
-    const result = await api("/api/questions/" + q.id + "/answer", {
-        method: "POST",
-        body: JSON.stringify({ optionIndex: state.selectedOption }),
-    });
+    let result;
+    try {
+        result = await api("/api/sessions/" + state.session.id + "/answer", {
+            method: "POST",
+            body: JSON.stringify({ questionId: q.id, optionIndex: state.selectedOption }),
+        });
+    } catch (e) {
+        toast(e.message, "ko");
+        return;
+    }
     const feedback = el("feedback");
     if (result.correct) {
-        feedback.textContent = t().correct;
+        state.sessionCorrect++;
+        feedback.textContent = result.answered === result.total
+            ? t().quizDone.replace("%1$d", state.sessionCorrect).replace("%2$d", result.total)
+            : t().correct;
         feedback.classList.add("ok");
         el("options").children[result.correctIndex].classList.add("correct");
         el("options").querySelectorAll(".option").forEach((o) => { o.disabled = true; });
@@ -517,7 +538,7 @@ async function submitAnswer() {
         el("rule-box").textContent = result.ruleTitle + "\n\n" + result.ruleContent;
         setLangAuto(el("rule-box"), result.ruleTitle + result.ruleContent);
     }
-    updateProgress(true);
+    updateProgress(true, result.answered, result.total);
     loadSummary();
 }
 
@@ -846,9 +867,11 @@ el("next-btn").addEventListener("click", () => {
         state.questionIndex++;
         showQuestion();
     } else {
+        state.session = null;
         el("quiz-section").classList.add("hidden");
         el("levels-section").classList.remove("hidden");
         loadLevels();
+        loadSummary();
     }
 });
 el("hint-btn").addEventListener("click", () => el("hint-box").classList.toggle("hidden"));

@@ -154,7 +154,9 @@ const db = {
           questions: [] },
     ],
     progress: new Map(),
+    sessions: new Map(),
 };
+let nextSessionId = 900;
 
 function resp(status, body) {
     return { status, ok: status >= 200 && status < 300, json: async () => body };
@@ -196,16 +198,37 @@ async function fetch(path, options = {}) {
         if (!l) return resp(404, { message: "Not found" });
         return resp(200, l.questions.map((q) => ({ id: q.id, caseLabel: q.caseLabel, prompt: q.promptFr, options: q.optionsFr })));
     }
-    if ((m = path.match(/^\/api\/questions\/(\d+)\/answer$/)) && method === "POST") {
-        const q = db.levels.flatMap((l) => l.questions).find((x) => x.id === Number(m[1]));
-        if (!q) return resp(404, { message: "Not found" });
+    if ((m = path.match(/^\/api\/levels\/(\d+)\/sessions$/)) && method === "POST") {
+        const l = db.levels.find((x) => x.id === Number(m[1]));
+        if (!l) return resp(404, { message: "Not found" });
+        const qs = l.questions;
+        const sess = { id: ++nextSessionId, levelId: l.id, questionIds: qs.map((q) => q.id), answeredIds: new Set() };
+        db.sessions.set(sess.id, sess);
+        return resp(201, { id: sess.id, levelId: l.id, total: qs.length, answered: 0,
+            questions: qs.map((q) => ({ id: q.id, caseLabel: q.caseLabel, prompt: q.promptFr, options: q.optionsFr })) });
+    }
+    if ((m = path.match(/^\/api\/sessions\/(\d+)$/)) && method === "GET") {
+        const sess = db.sessions.get(Number(m[1]));
+        if (!sess) return resp(404, { message: "Not found" });
+        const l = db.levels.find((x) => x.id === sess.levelId);
+        return resp(200, { id: sess.id, levelId: sess.levelId, total: sess.questionIds.length, answered: sess.answeredIds.size,
+            questions: l.questions.map((q) => ({ id: q.id, caseLabel: q.caseLabel, prompt: q.promptFr, options: q.optionsFr })) });
+    }
+    if ((m = path.match(/^\/api\/sessions\/(\d+)\/answer$/)) && method === "POST") {
+        const sess = db.sessions.get(Number(m[1]));
+        if (!sess) return resp(404, { message: "Not found" });
+        if (!sess.questionIds.includes(body.questionId)) return resp(400, { message: "Not in session" });
+        if (sess.answeredIds.has(body.questionId)) return resp(409, { message: "Already answered" });
+        sess.answeredIds.add(body.questionId);
+        const q = db.levels.flatMap((l) => l.questions).find((x) => x.id === body.questionId);
         const correct = body.optionIndex === q.correctIndex;
         const p = db.progress.get(user) || {};
         p[q.id] = p[q.id] || { attempts: 0, correctCount: 0 };
         p[q.id].attempts++;
         if (correct) p[q.id].correctCount++;
         db.progress.set(user, p);
-        return resp(200, { correct, correctIndex: q.correctIndex, hint: q.hintFr, ruleTitle: q.ruleTitle, ruleContent: q.ruleContent });
+        return resp(200, { correct, correctIndex: q.correctIndex, hint: q.hintFr, ruleTitle: q.ruleTitle, ruleContent: q.ruleContent,
+            answered: sess.answeredIds.size, total: sess.questionIds.length });
     }
     if (path === "/api/progress/me/summary" && method === "GET") {
         const p = db.progress.get(user) || {};
@@ -251,7 +274,7 @@ check(el("levels").children[0].querySelector("h3").textContent === "Nominatif", 
 
 el("levels").children[0].click();
 await tick(); await tick();
-check(el("quiz-section").classList.contains("hidden") === false, "quiz section shown after picking a level");
+check(el("quiz-section").classList.contains("hidden") === false, "quiz section shown after picking a level (session created)");
 check(el("levels-section").classList.contains("hidden") === true, "levels section hidden during quiz");
 check(el("question-counter").textContent === "Question 1 / 2", "question counter = 'Question 1 / 2'");
 const opts = el("options").querySelectorAll(".option");
@@ -268,14 +291,26 @@ el("submit-btn").click();
 await tick(); await tick();
 check(el("feedback").classList.contains("ko") === true, "wrong answer -> ko feedback");
 check(opts[1].classList.contains("wrong") === true, "wrong option marked .wrong");
+check(el("progress-bar").getAttribute("aria-valuenow") === "50", "progressbar aria-valuenow=50 after first answered question");
 
 opts[0].click();
 el("submit-btn").click();
 await tick(); await tick();
+check(el("toasts").children.length === 1 && el("toasts").children[0].classList.contains("ko"), "re-answering same question -> 409 surfaced as toast, no crash");
+
+el("back-btn").click();
+await tick();
+el("levels").children[0].click();
+await tick(); await tick();
+check(el("question-counter").textContent === "Question 1 / 2", "new session restarts at 'Question 1 / 2'");
+const opts2 = el("options").querySelectorAll(".option");
+opts2[0].click();
+el("submit-btn").click();
+await tick(); await tick();
 check(el("feedback").classList.contains("ok") === true, "correct answer -> ok feedback");
 check(el("next-btn").classList.contains("hidden") === false, "next button shown after correct answer");
-check(opts.every((o) => o.disabled === true), "options locked after correct answer");
-check(el("progress-bar").getAttribute("aria-valuenow") === "50", "progressbar aria-valuenow=50 after Q1");
+check(opts2.every((o) => o.disabled === true), "options locked after correct answer");
+check(el("progress-bar").getAttribute("aria-valuenow") === "50", "progressbar aria-valuenow=50 after Q1 correct");
 check(document.activeElement === el("next-btn"), "focus moved to next button");
 
 el("next-btn").click();
@@ -286,6 +321,7 @@ opts3[0].click();
 el("submit-btn").click();
 await tick(); await tick();
 check(el("feedback").classList.contains("ok") === true, "Q2 correct");
+check(el("feedback").textContent.includes("2"), "quiz-done summary message shown on last question");
 el("next-btn").click();
 await tick(); await tick();
 check(el("quiz-section").classList.contains("hidden") === true, "quiz ends back on levels view");
