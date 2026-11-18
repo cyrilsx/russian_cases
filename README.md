@@ -111,8 +111,8 @@ mvn -pl android package                          # produit android/target/*.apk 
 ```
 
 Les sources du module Android sont en **Kotlin** (`android/src/main/kotlin`, compilées par
-kotlin-maven-plugin 1.7.10, `jvmTarget 1.6` (pas d'invokedynamic, que `dx` refuse sous minSdk 26)). L'app **cible
-Android 16** (`targetSdkVersion 36`, `minSdkVersion 21`) : elle s'installe et tourne sur Android 16.
+kotlin-maven-plugin 1.7.10, `jvmTarget 1.8`). `minSdkVersion` passe à 26 (Android 8) car `dx` n'accepte les `invokedynamic` de Kotlin qu'à partir de l'API 26. L'app **cible
+Android 16** (`targetSdkVersion 36`, `minSdkVersion 26`) : elle s'installe et tourne sur Android 16.
 La compilation se fait contre la plateforme 29 car le `aapt` v1 d'android-maven-plugin 4.6.0 ne sait
 pas parser les resources des plateformes récentes ; passer `compileSdk` à 36 nécessiterait de migrer
 le build vers AGP/Gradle.

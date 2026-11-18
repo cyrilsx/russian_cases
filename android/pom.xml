@@ -60,7 +60,7 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <jvmTarget>1.6</jvmTarget>
+                    <jvmTarget>1.8</jvmTarget>
                 </configuration>
             </plugin>
             <plugin>
@@ -73,6 +73,11 @@
                         <platform>${android.platform}</platform>
                         <buildTools>${android.build-tools}</buildTools>
                     </sdk>
+                    <dex>
+                        <dexArguments>
+                            <dexArgument>--min-sdk-version=26</dexArgument>
+                        </dexArguments>
+                    </dex>
                 </configuration>
                 <dependencies>
                     <dependency>
