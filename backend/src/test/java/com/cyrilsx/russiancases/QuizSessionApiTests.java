@@ -70,12 +70,12 @@ class QuizSessionApiTests {
         List<?> questions = (List<?>) session.getBody().get("questions");
         int total = ((Number) session.getBody().get("total")).intValue();
         assertThat(total).isEqualTo(15);
-        assertThat(questions).hasSize(8);
+        assertThat(questions).hasSize(15);
         Set<Long> ids = new HashSet<>();
         for (Object q : questions) {
             ids.add(((Number) ((Map<?, ?>) q).get("id")).longValue());
         }
-        assertThat(ids).hasSize(8);
+        assertThat(ids).hasSize(15);
         assertThat(levelQuestionIds).containsAll(ids);
         assertThat(((Number) session.getBody().get("answered")).intValue()).isZero();
     }
