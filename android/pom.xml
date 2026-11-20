@@ -22,6 +22,9 @@
         <android.build-tools>30.0.3</android.build-tools>
         <android-maven-plugin.version>4.6.0</android-maven-plugin.version>
         <kotlin.version>1.3.72</kotlin.version>
+        <!-- debug signing by default (local dev + CI); set -Dandroid.sign.debug=false and provide
+             ANDROID_KEYSTORE / ANDROID_STORE_PASS / ANDROID_KEY_PASS / ANDROID_KEY_ALIAS to sign a release -->
+        <android.sign.debug>true</android.sign.debug>
     </properties>
 
     <dependencies>
@@ -76,6 +79,15 @@
                     <dex>
                         <dexArguments>--min-sdk-version=26</dexArguments>
                     </dex>
+                    <sign>
+                        <debug>${android.sign.debug}</debug>
+                    </sign>
+                    <keystore>${env.ANDROID_KEYSTORE}</keystore>
+                    <storepass>${env.ANDROID_STORE_PASS}</storepass>
+                    <keypass>${env.ANDROID_KEY_PASS}</keypass>
+                    <alias>${env.ANDROID_KEY_ALIAS}</alias>
+                    <sigalg>SHA256withRSA</sigalg>
+                    <digestalg>SHA-256</digestalg>
                 </configuration>
                 <dependencies>
                     <dependency>
