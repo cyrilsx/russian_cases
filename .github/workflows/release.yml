@@ -77,7 +77,8 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          find dist -mindepth 2 -type f -exec mv -t dist/ {} +
           gh release create "$GITHUB_REF_NAME" \
             --title "$GITHUB_REF_NAME" \
             --generate-notes \
-            dist/jars/*.jar dist/apk/*.apk
+            dist/*.jar dist/*.apk
