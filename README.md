@@ -139,7 +139,12 @@ Le module `android` n'est inclus dans le build que si `ANDROID_HOME` est défini
 
 ## CI
 
-`.github/workflows/ci.yml` : trois jobs — backend+webapp (JDK 25, `mvn verify -pl webapp,backend`),
+`.github/workflows/ci.yml` : trois jobs — backend+webapp (JDK 25, `mvn verify -pl webapp,backend`, publie
+les JAR `backend/target/*.jar` et `webapp/target/*.jar` comme artefact d'actions
+`nommé russian-cases-backend-webapp-jars`),
 vérifications d'intégration de la webapp (contrat API `webapp/tests/contract_check.py` + test E2E
 Node `webapp/tests/e2e_smoke.mjs`, exécutés en local avec `python3 webapp/tests/contract_check.py`
-et `node webapp/tests/e2e_smoke.mjs`) et APK Android (JDK 8 + SDK 29, `mvn verify -pl android`).
+et `node webapp/tests/e2e_smoke.mjs`) et APK Android (JDK 8 + SDK 29, `mvn verify -pl android`, publie l'APK comme artefact
+`russian-cases-android-apk`). Un tag `v*` déclenche `.github/workflows/release.yml` qui construit
+les JAR + l'APK et les publie dans une **Release GitHub** (nécessite `contents: write` sur le
+`GITHUB_TOKEN`, déjà configuré dans le workflow).

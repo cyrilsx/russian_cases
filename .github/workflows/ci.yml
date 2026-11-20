@@ -19,6 +19,14 @@ jobs:
           cache: maven
       - name: Build and test backend and webapp
         run: mvn -B -ntp verify -pl webapp,backend
+      - name: Upload JAR artifacts
+        uses: actions/upload-artifact@v6
+        with:
+          name: russian-cases-backend-webapp-jars
+          path: |
+            backend/target/*.jar
+            webapp/target/*.jar
+          retention-days: 30
 
   webapp-e2e:
     name: Webapp integration checks (API contract + E2E smoke)

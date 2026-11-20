@@ -1,0 +1,83 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  build-backend-webapp:
+    name: Build backend + webapp JARs (JDK 25)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "25"
+          cache: maven
+      - name: Build backend and webapp
+        run: mvn -B -ntp verify -pl webapp,backend
+      - name: Upload JAR artifacts
+        uses: actions/upload-artifact@v6
+        with:
+          name: russian-cases-backend-webapp-jars
+          path: |
+            backend/target/*.jar
+            webapp/target/*.jar
+          retention-days: 90
+
+  build-android:
+    name: Build Android APK (SDK setup on JDK 21, build on JDK 8)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+      - uses: android-actions/setup-android@v4
+        with:
+          packages: platform-tools
+      - name: Install SDK packages
+        run: |
+          SDKMGR="$(ls -d "$ANDROID_HOME"/cmdline-tools/*/bin/sdkmanager | sort -V | tail -1)"
+          "$SDKMGR" "platforms;android-29" "build-tools;30.0.3"
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "8"
+      - name: Build the APK
+        run: mvn -B -ntp verify -pl android
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: russian-cases-android-apk
+          path: android/target/*.apk
+          retention-days: 90
+
+  release:
+    name: Publish GitHub release with artifacts
+    needs: [build-backend-webapp, build-android]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v6
+        with:
+          name: russian-cases-backend-webapp-jars
+          path: dist/jars
+      - uses: actions/download-artifact@v6
+        with:
+          name: russian-cases-android-apk
+          path: dist/apk
+      - name: Create release and attach artifacts
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            --title "$GITHUB_REF_NAME" \
+            --generate-notes \
+            dist/jars/*.jar dist/apk/*.apk
