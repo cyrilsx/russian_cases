@@ -5,6 +5,7 @@ import com.cyrilsx.russiancases.android.model.Level
 import com.cyrilsx.russiancases.android.model.ProgressSummary
 import com.cyrilsx.russiancases.android.model.Question
 import com.cyrilsx.russiancases.android.model.QuizSession
+import com.cyrilsx.russiancases.android.model.ReportResult
 import com.cyrilsx.russiancases.android.model.Rule
 import org.json.JSONArray
 import org.json.JSONException
@@ -62,6 +63,14 @@ class ApiClient(baseUrl: String, private val token: String?) {
     fun answerInSession(sessionId: Long, questionId: Long, optionIndex: Int): AnswerResult {
         val body = JSONObject().put("questionId", questionId).put("optionIndex", optionIndex)
         return AnswerResult.fromJson(JSONObject(request("POST", "/api/sessions/$sessionId/answer", body.toString())))
+    }
+
+    @Throws(ApiException::class, IOException::class, JSONException::class)
+    fun reportAnswer(questionId: Long, claimedCorrectIndex: Int?, justification: String): ReportResult {
+        val body = JSONObject()
+            .put("justification", justification)
+            .put("claimedCorrectIndex", claimedCorrectIndex ?: JSONObject.NULL)
+        return ReportResult.fromJson(JSONObject(request("POST", "/api/questions/$questionId/report", body.toString())))
     }
 
     @Throws(ApiException::class, IOException::class, JSONException::class)

@@ -24,4 +24,10 @@
     <string name="correct">Juste ! Bravo !</string>
     <string name="wrong">Pas tout à fait — réessaie ou demande un indice.</string>
     <string name="quiz_done">Quiz terminé : %1$d / %2$d</string>
+    <string name="report_answer">Signaler la réponse</string>
+    <string name="report_claim">Je pense que la bonne réponse est :</string>
+    <string name="report_justification_hint">Justification…</string>
+    <string name="report_send">Envoyer le signalement</string>
+    <string name="report_sent">Signalement envoyé — un administrateur va l\'examiner. Merci !</string>
+    <string name="cancel">Annuler</string>
 </resources>
