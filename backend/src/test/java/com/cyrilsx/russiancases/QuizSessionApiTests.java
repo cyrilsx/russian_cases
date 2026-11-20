@@ -69,13 +69,13 @@ class QuizSessionApiTests {
                 new HttpEntity<>(auth(token)), Map.class);
         List<?> questions = (List<?>) session.getBody().get("questions");
         int total = ((Number) session.getBody().get("total")).intValue();
-        assertThat(total).isEqualTo(8);
-        assertThat(questions).hasSize(8);
+        assertThat(total).isEqualTo(15);
+        assertThat(questions).hasSize(15);
         Set<Long> ids = new HashSet<>();
         for (Object q : questions) {
             ids.add(((Number) ((Map<?, ?>) q).get("id")).longValue());
         }
-        assertThat(ids).hasSize(8);
+        assertThat(ids).hasSize(15);
         assertThat(levelQuestionIds).containsAll(ids);
         assertThat(((Number) session.getBody().get("answered")).intValue()).isZero();
     }
@@ -94,7 +94,7 @@ class QuizSessionApiTests {
                 new HttpEntity<>(Map.of("questionId", questionId, "optionIndex", 0), auth(token)), Map.class);
         assertThat(first.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(((Number) first.getBody().get("answered")).intValue()).isEqualTo(1);
-        assertThat(((Number) first.getBody().get("total")).intValue()).isEqualTo(8);
+        assertThat(((Number) first.getBody().get("total")).intValue()).isEqualTo(15);
 
         ResponseEntity<Map> retry = rest.exchange("/api/sessions/" + sessionId + "/answer", HttpMethod.POST,
                 new HttpEntity<>(Map.of("questionId", questionId, "optionIndex", 0), auth(token)), Map.class);
