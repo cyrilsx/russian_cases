@@ -56,3 +56,9 @@ jobs:
           java-version: "8"
       - name: Build the APK
         run: mvn -B -ntp verify -pl android
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: russian-cases-android-apk
+          path: android/target/*.apk
+          retention-days: 30
