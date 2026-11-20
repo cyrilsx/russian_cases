@@ -61,6 +61,8 @@ header obtained from `/api/auth/register` or `/api/auth/login`.
 | GET | `/api/levels/{id}/questions` | Toutes les questions d'un niveau (admin) |
 | GET | `/api/questions/{id}` | Une question |
 | POST | `/api/questions/{id}/answer` | Répondre (`{"optionIndex": 0}`) → résultat + indice + règle |
+| POST | `/api/questions/{id}/report` | Signaler une réponse avec justification (`{"claimedCorrectIndex": 1, "justification": "..."}`) → 201, 409 si signalement déjà ouvert |
+| GET | `/api/reports/me` | Mes signalements |
 | POST | `/api/levels/{id}/sessions` | Démarrer un quiz : sélection aléatoire de `app.quiz.questions-per-session` (8 par défaut) questions → session |
 | GET | `/api/sessions/{id}` | État d'une session de quiz |
 | POST | `/api/sessions/{id}/answer` | Répondre dans une session (`{"questionId": 1, "optionIndex": 0}`) → résultat + indice + règle + `answered`/`total` (réessai autorisé après une mauvaise réponse, `answered` compte les questions distinctes ; 400 si hors session) |
@@ -82,6 +84,8 @@ header obtained from `/api/auth/register` or `/api/auth/login`.
 | DELETE | `/api/admin/users/{id}` | Supprimer un utilisateur (+ sa progression) |
 | GET | `/api/admin/progress` | Progression de tous les utilisateurs |
 | DELETE | `/api/admin/progress/{userId}` | Réinitialiser la progression d'un utilisateur |
+| GET | `/api/admin/reports?status=OPEN` | Lister les signalements de réponses |
+| PUT | `/api/admin/reports/{id}/resolve` | Traiter un signalement (`{"status": "ACCEPTED", "correctIndex": 1, "note": "..."}` — `correctIndex` optionnel, corrige la question si fourni) |
 
 Un compte admin est créé au démarrage si absent : `app.admin.username` / `app.admin.password`
 (variables d'environnement `APP_ADMIN_USERNAME` / `APP_ADMIN_PASSWORD` — à changer en production).

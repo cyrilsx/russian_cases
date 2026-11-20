@@ -1,6 +1,8 @@
 package com.cyrilsx.russiancases.web;
 
+import com.cyrilsx.russiancases.model.ReportStatus;
 import com.cyrilsx.russiancases.service.AdminService;
+import com.cyrilsx.russiancases.service.ReportService;
 import com.cyrilsx.russiancases.web.dto.AdminLevelDto;
 import com.cyrilsx.russiancases.web.dto.AdminProgressDto;
 import com.cyrilsx.russiancases.web.dto.AdminQuestionDto;
@@ -8,6 +10,8 @@ import com.cyrilsx.russiancases.web.dto.AdminRuleDto;
 import com.cyrilsx.russiancases.web.dto.LevelUpsertRequest;
 import com.cyrilsx.russiancases.web.dto.QuestionUpsertRequest;
 import com.cyrilsx.russiancases.web.dto.RoleUpdateRequest;
+import com.cyrilsx.russiancases.web.dto.ReportDto;
+import com.cyrilsx.russiancases.web.dto.ResolveReportRequest;
 import com.cyrilsx.russiancases.web.dto.RuleUpsertRequest;
 import com.cyrilsx.russiancases.web.dto.UserDto;
 import jakarta.validation.Valid;
@@ -26,14 +30,18 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/admin")
 public class AdminController {
 
     private final AdminService adminService;
+    private final ReportService reportService;
 
-    public AdminController(AdminService adminService) {
+    public AdminController(AdminService adminService, ReportService reportService) {
         this.adminService = adminService;
+        this.reportService = reportService;
     }
 
     @GetMapping("/levels")
@@ -125,5 +133,16 @@ public class AdminController {
     public ResponseEntity<Void> resetProgress(@PathVariable String userId) {
         adminService.resetProgress(userId);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/reports")
+    public List<ReportDto> listReports(@RequestParam(required = false) ReportStatus status) {
+        return reportService.listForAdmin(status);
+    }
+
+    @PutMapping("/reports/{id}/resolve")
+    public ReportDto resolveReport(@PathVariable Long id, @Valid @RequestBody ResolveReportRequest request,
+                                   Authentication authentication) {
+        return reportService.resolve(id, request, authentication.getName());
     }
 }

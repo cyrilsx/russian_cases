@@ -101,6 +101,20 @@ const i18n = {
         themeLight: "clair",
         themeDark: "sombre",
         quizDone: "Quiz terminé : %1$d bonnes réponses sur %2$d !",
+        reportAnswer: "Signaler la réponse",
+        reportClaim: "Je pense que la bonne réponse est :",
+        reportJustification: "Justification :",
+        reportSend: "Envoyer le signalement",
+        reportSent: "Signalement envoyé, merci ! Un administrateur va l'examiner.",
+        adminReports: "Signalements",
+        justification: "Justification",
+        status: "Statut",
+        claimed: "Réponse revendiquée",
+        accept: "Accepter (et corriger)",
+        reject: "Rejeter",
+        acceptPrompt: "Accepter ce signalement et définir l'option revendiquée comme bonne réponse ? (Annuler = accepter sans changer la réponse)",
+        rejectPrompt: "Rejeter ce signalement ?",
+        question: "Question",
     },
     en: {
         title: "Russian Cases",
@@ -188,6 +202,20 @@ const i18n = {
         themeLight: "light",
         themeDark: "dark",
         quizDone: "Quiz done: %1$d correct out of %2$d!",
+        reportAnswer: "Report this answer",
+        reportClaim: "I think the correct answer is:",
+        reportJustification: "Justification:",
+        reportSend: "Send report",
+        reportSent: "Report sent, thank you! An admin will review it.",
+        adminReports: "Reports",
+        justification: "Justification",
+        status: "Status",
+        claimed: "Claimed answer",
+        accept: "Accept (and fix)",
+        reject: "Reject",
+        acceptPrompt: "Accept this report and set the claimed option as the correct answer? (Cancel = accept without changing the answer)",
+        rejectPrompt: "Reject this report?",
+        question: "Question",
     },
 };
 
@@ -239,6 +267,11 @@ function applyLang() {
     el("submit-btn").textContent = t().submit;
     el("hint-btn").textContent = t().hint;
     el("rule-btn").textContent = t().rule;
+    el("report-btn").textContent = t().reportAnswer;
+    el("report-claim-label").textContent = t().reportClaim;
+    el("report-justification-label").textContent = t().reportJustification;
+    el("report-send").textContent = t().reportSend;
+    el("report-cancel").textContent = t().cancel;
     el("next-btn").textContent = t().next;
     el("progress-heading").textContent = t().progress;
     el("auth-title").textContent = t().authTitle;
@@ -459,6 +492,9 @@ function showQuestion() {
     el("feedback").className = "feedback";
     el("hint-box").classList.add("hidden");
     el("rule-box").classList.add("hidden");
+    el("report-btn").classList.add("hidden");
+    el("report-form").classList.add("hidden");
+    el("report-msg").textContent = "";
     el("next-btn").classList.add("hidden");
     el("submit-btn").classList.remove("hidden");
     el("submit-btn").disabled = true;
@@ -539,6 +575,15 @@ async function submitAnswer() {
         setLangAuto(el("rule-box"), result.ruleTitle + result.ruleContent);
     }
     updateProgress(true, result.answered, result.total);
+    el("report-btn").classList.remove("hidden");
+    const claim = el("report-claim");
+    claim.innerHTML = "";
+    q.options.forEach((option, i) => {
+        const o = document.createElement("option");
+        o.value = i;
+        o.textContent = option;
+        claim.appendChild(o);
+    });
     loadSummary();
 }
 
@@ -581,6 +626,7 @@ async function renderAdminTab() {
         else if (state.adminTab === "rules") await renderAdminRules(content);
         else if (state.adminTab === "users") await renderAdminUsers(content);
         else if (state.adminTab === "progress") await renderAdminProgress(content);
+        else if (state.adminTab === "reports") await renderAdminReports(content);
     } catch (e) {
         content.innerHTML = "<p class='feedback ko'>" + esc(e.message) + "</p>";
     }
@@ -861,7 +907,78 @@ el("back-btn").addEventListener("click", () => {
     el("quiz-section").classList.add("hidden");
     el("levels-section").classList.remove("hidden");
 });
+async function submitReport() {
+    const q = state.questions[state.questionIndex];
+    const msg = el("report-msg");
+    msg.textContent = "";
+    const claim = el("report-claim");
+    const claimed = claim.value === "" ? null : Number(claim.value);
+    try {
+        await api("/api/questions/" + q.id + "/report", {
+            method: "POST",
+            body: JSON.stringify({
+                claimedCorrectIndex: claimed,
+                justification: el("report-justification").value.trim(),
+            }),
+        });
+        msg.textContent = t().reportSent;
+        msg.className = "feedback ok";
+        el("report-form").classList.add("hidden");
+        el("report-btn").classList.add("hidden");
+    } catch (e) {
+        msg.textContent = e.message;
+        msg.className = "feedback ko";
+    }
+}
+
+async function renderAdminReports(content) {
+    const reports = await api("/api/admin/reports");
+    let rows = "";
+    for (const r of reports) {
+        const actions = r.status === "OPEN"
+            ? "<button class='btn secondary act-accept'>" + esc(t().accept) + "</button> " +
+              "<button class='btn secondary act-reject'>" + esc(t().reject) + "</button>"
+            : esc(r.resolvedBy || "");
+        rows += "<tr><td>" + r.id + "</td><td>" + r.questionId + "</td><td>" + esc(r.userId) + "</td><td>" +
+            (r.claimedCorrectIndex == null ? "-" : r.claimedCorrectIndex) + "</td><td>" + esc(r.justification) + "</td><td>" +
+            esc(r.status) + "</td><td>" + esc((r.createdAt || "").slice(0, 19).replace("T", " ")) + "</td><td>" + actions + "</td></tr>";
+    }
+    content.innerHTML = adminTable(
+        [t().id, t().question, t().userId, t().claimed, t().justification, t().status, t().createdAt, t().actions], rows);
+    content.querySelectorAll("tbody tr").forEach((tr, i) => {
+        const report = reports[i];
+        const accept = tr.querySelector(".act-accept");
+        const reject = tr.querySelector(".act-reject");
+        if (accept) accept.addEventListener("click", async () => {
+            const fix = report.claimedCorrectIndex != null && confirm(t().acceptPrompt);
+            try {
+                await api("/api/admin/reports/" + report.id + "/resolve", {
+                    method: "PUT",
+                    body: JSON.stringify({ status: "ACCEPTED", correctIndex: fix ? report.claimedCorrectIndex : null }),
+                });
+                renderAdminTab();
+            } catch (e) { alert(e.message); }
+        });
+        if (reject) reject.addEventListener("click", async () => {
+            if (!confirm(t().rejectPrompt)) return;
+            try {
+                await api("/api/admin/reports/" + report.id + "/resolve", {
+                    method: "PUT",
+                    body: JSON.stringify({ status: "REJECTED" }),
+                });
+                renderAdminTab();
+            } catch (e) { alert(e.message); }
+        });
+    });
+}
+
 el("submit-btn").addEventListener("click", submitAnswer);
+el("report-btn").addEventListener("click", () => {
+    el("report-form").classList.toggle("hidden");
+    el("report-msg").textContent = "";
+});
+el("report-send").addEventListener("click", submitReport);
+el("report-cancel").addEventListener("click", () => el("report-form").classList.add("hidden"));
 el("next-btn").addEventListener("click", () => {
     if (state.questionIndex + 1 < state.questions.length) {
         state.questionIndex++;
