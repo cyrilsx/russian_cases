@@ -81,13 +81,13 @@
                     </dex>
                     <sign>
                         <debug>${android.sign.debug}</debug>
-                        <keystore>${env.ANDROID_KEYSTORE}</keystore>
-                        <storepass>${env.ANDROID_STORE_PASS}</storepass>
-                        <keypass>${env.ANDROID_KEY_PASS}</keypass>
-                        <alias>${env.ANDROID_KEY_ALIAS}</alias>
-                        <sigalg>SHA256withRSA</sigalg>
-                        <digestalg>SHA-256</digestalg>
                     </sign>
+                    <keystore>${env.ANDROID_KEYSTORE}</keystore>
+                    <storepass>${env.ANDROID_STORE_PASS}</storepass>
+                    <keypass>${env.ANDROID_KEY_PASS}</keypass>
+                    <alias>${env.ANDROID_KEY_ALIAS}</alias>
+                    <sigalg>SHA256withRSA</sigalg>
+                    <digestalg>SHA-256</digestalg>
                 </configuration>
                 <dependencies>
                     <dependency>
