@@ -50,9 +50,14 @@ jobs:
         with:
           distribution: temurin
           java-version: "8"
+      - name: Build the APK (debug-signed; release keystore secret not set)
+        if: ${{ secrets.ANDROID_KEYSTORE_B64 == '' }}
+        run: mvn -B -ntp verify -pl android
       - name: Decode release keystore
+        if: ${{ secrets.ANDROID_KEYSTORE_B64 != '' }}
         run: echo "${{ secrets.ANDROID_KEYSTORE_B64 }}" | base64 -d > "${{ runner.temp }}/release.keystore"
       - name: Build the APK (release-signed)
+        if: ${{ secrets.ANDROID_KEYSTORE_B64 != '' }}
         run: mvn -B -ntp verify -pl android -Dandroid.sign.debug=false
         env:
           ANDROID_KEYSTORE: ${{ runner.temp }}/release.keystore
@@ -60,6 +65,7 @@ jobs:
           ANDROID_KEY_PASS: ${{ secrets.ANDROID_KEY_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
       - name: Add v2/v3 signatures and verify (apksigner)
+        if: ${{ secrets.ANDROID_KEYSTORE_B64 != '' }}
         env:
           ANDROID_KEYSTORE: ${{ runner.temp }}/release.keystore
           ANDROID_STORE_PASS: ${{ secrets.ANDROID_STORE_PASSWORD }}
