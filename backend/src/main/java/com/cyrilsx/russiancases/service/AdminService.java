@@ -7,6 +7,7 @@ import com.cyrilsx.russiancases.model.QuestionEntity;
 import com.cyrilsx.russiancases.model.Role;
 import com.cyrilsx.russiancases.model.RuleEntity;
 import com.cyrilsx.russiancases.model.UserEntity;
+import com.cyrilsx.russiancases.repository.AnswerReportRepository;
 import com.cyrilsx.russiancases.repository.LevelRepository;
 import com.cyrilsx.russiancases.repository.ProgressRepository;
 import com.cyrilsx.russiancases.repository.QuestionRepository;
@@ -35,17 +36,20 @@ public class AdminService {
     private final RuleRepository ruleRepository;
     private final UserRepository userRepository;
     private final ProgressRepository progressRepository;
+    private final AnswerReportRepository reportRepository;
 
     public AdminService(LevelRepository levelRepository,
                         QuestionRepository questionRepository,
                         RuleRepository ruleRepository,
                         UserRepository userRepository,
-                        ProgressRepository progressRepository) {
+                        ProgressRepository progressRepository,
+                        AnswerReportRepository reportRepository) {
         this.levelRepository = levelRepository;
         this.questionRepository = questionRepository;
         this.ruleRepository = ruleRepository;
         this.userRepository = userRepository;
         this.progressRepository = progressRepository;
+        this.reportRepository = reportRepository;
     }
 
     @Transactional(readOnly = true)
@@ -106,6 +110,7 @@ public class AdminService {
     public void deleteQuestion(Long id) {
         QuestionEntity question = findQuestion(id);
         progressRepository.deleteByQuestionId(id);
+        reportRepository.deleteByQuestionId(id);
         questionRepository.delete(question);
     }
 

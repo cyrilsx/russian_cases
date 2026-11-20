@@ -79,10 +79,22 @@
                     <button id="submit-btn" class="btn primary" disabled>Valider</button>
                     <button id="hint-btn" class="btn secondary">Indice</button>
                     <button id="rule-btn" class="btn secondary">Rappel de règle</button>
+                    <button id="report-btn" class="btn secondary hidden">Signaler la réponse</button>
                 </div>
                 <p id="feedback" class="feedback" role="status" aria-live="polite"></p>
                 <div id="hint-box" class="hint hidden" aria-live="polite"></div>
                 <div id="rule-box" class="rule hidden" aria-live="polite"></div>
+                <div id="report-form" class="hidden">
+                    <label id="report-claim-label" for="report-claim">Je pense que la bonne réponse est :</label>
+                    <select id="report-claim"></select>
+                    <label id="report-justification-label" for="report-justification">Justification :</label>
+                    <textarea id="report-justification" rows="3"></textarea>
+                    <div class="actions">
+                        <button id="report-send" class="btn primary">Envoyer le signalement</button>
+                        <button id="report-cancel" class="btn secondary">Annuler</button>
+                    </div>
+                    <p id="report-msg" class="feedback" role="status" aria-live="polite"></p>
+                </div>
             </div>
             <button id="next-btn" class="btn primary hidden">Question suivante &#8594;</button>
         </section>
@@ -100,6 +112,7 @@
             <button class="lang-btn admin-tab" data-tab="rules" role="tab">Règles</button>
             <button class="lang-btn admin-tab" data-tab="users" role="tab">Utilisateurs</button>
             <button class="lang-btn admin-tab" data-tab="progress" role="tab">Progression</button>
+            <button class="lang-btn admin-tab" data-tab="reports" role="tab">Signalements</button>
         </div>
         <div id="admin-content"></div>
     </div>
