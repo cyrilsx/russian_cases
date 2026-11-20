@@ -25,4 +25,10 @@
     <string name="correct">Correct! Well done!</string>
     <string name="wrong">Not quite — try again or ask for a hint.</string>
     <string name="quiz_done">Quiz done: %1$d / %2$d</string>
+    <string name="report_answer">Report this answer</string>
+    <string name="report_claim">I think the correct answer is:</string>
+    <string name="report_justification_hint">Justification…</string>
+    <string name="report_send">Send report</string>
+    <string name="report_sent">Report sent — an admin will review it. Thank you!</string>
+    <string name="cancel">Cancel</string>
 </resources>

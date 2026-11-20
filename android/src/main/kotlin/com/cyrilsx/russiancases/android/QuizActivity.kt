@@ -1,12 +1,16 @@
 package com.cyrilsx.russiancases.android
 
+import android.app.AlertDialog
 import android.app.Activity
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
 import android.widget.Button
+import android.widget.EditText
 import android.widget.RadioButton
 import android.widget.RadioGroup
 import android.widget.TextView
+import android.widget.Toast
 import com.cyrilsx.russiancases.android.model.AnswerResult
 import com.cyrilsx.russiancases.android.model.Question
 import com.cyrilsx.russiancases.android.model.QuizSession
@@ -34,6 +38,7 @@ class QuizActivity : Activity() {
     private lateinit var ruleButton: Button
     private lateinit var nextButton: Button
     private lateinit var backButton: Button
+    private lateinit var reportButton: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -58,6 +63,7 @@ class QuizActivity : Activity() {
         ruleButton = findViewById(R.id.rule_button) as Button
         nextButton = findViewById(R.id.next_button) as Button
         backButton = findViewById(R.id.back_button) as Button
+        reportButton = findViewById(R.id.report_button) as Button
 
         titleText.text = intent.getStringExtra("level_title")
 
@@ -74,6 +80,7 @@ class QuizActivity : Activity() {
             hintText.visibility = if (hintText.visibility == View.VISIBLE) View.GONE else View.VISIBLE
         }
         ruleButton.setOnClickListener { loadRule() }
+        reportButton.setOnClickListener { showReportDialog() }
         backButton.setOnClickListener { finish() }
 
         loadSession()
@@ -109,6 +116,7 @@ class QuizActivity : Activity() {
         hintText.text = q.hint
         hintText.visibility = View.GONE
         ruleText.visibility = View.GONE
+        reportButton.visibility = View.GONE
         submitButton.visibility = View.VISIBLE
         nextButton.visibility = View.GONE
         optionsGroup.removeAllViews()
@@ -163,6 +171,49 @@ class QuizActivity : Activity() {
         }
         submitButton.visibility = View.GONE
         nextButton.visibility = View.VISIBLE
+        reportButton.visibility = View.VISIBLE
+    }
+
+    private fun showReportDialog() {
+        val q = questions[index]
+        val view = LayoutInflater.from(this).inflate(R.layout.dialog_report, null)
+        val reportOptions = view.findViewById(R.id.report_options) as RadioGroup
+        q.options.forEachIndexed { i, optionText ->
+            val option = RadioButton(this)
+            option.id = i
+            option.text = optionText
+            reportOptions.addView(option)
+        }
+        val justification = view.findViewById(R.id.report_justification) as EditText
+        AlertDialog.Builder(this)
+            .setTitle(R.string.report_answer)
+            .setView(view)
+            .setPositiveButton(R.string.report_send) { _, _ ->
+                val claimed = reportOptions.checkedRadioButtonId
+                sendReport(q.id, if (claimed >= 0) claimed else null, justification.text.toString().trim())
+            }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
+    }
+
+    private fun sendReport(questionId: Long, claimedCorrectIndex: Int?, justification: String) {
+        if (justification.isEmpty()) {
+            Toast.makeText(this, R.string.report_justification_hint, Toast.LENGTH_LONG).show()
+            return
+        }
+        thread {
+            try {
+                api.reportAnswer(questionId, claimedCorrectIndex, justification)
+                runOnUiThread {
+                    Toast.makeText(this, R.string.report_sent, Toast.LENGTH_LONG).show()
+                    reportButton.visibility = View.GONE
+                }
+            } catch (e: Exception) {
+                runOnUiThread {
+                    Toast.makeText(this, e.message ?: getString(R.string.network_error), Toast.LENGTH_LONG).show()
+                }
+            }
+        }
     }
 
     private fun loadRule() {
