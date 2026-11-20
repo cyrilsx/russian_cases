@@ -41,26 +41,6 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-antrun-plugin</artifactId>
-                <version>3.1.0</version>
-                <executions>
-                    <execution>
-                        <id>shim-legacy-source-properties</id>
-                        <phase>validate</phase>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
-                        <configuration>
-                            <target>
-                                <mkdir dir="${env.ANDROID_HOME}/tools"/>
-                                <echo file="${env.ANDROID_HOME}/tools/source.properties">Pkg.Revision=26.1.1</echo>
-                            </target>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
                 <groupId>org.jetbrains.kotlin</groupId>
                 <artifactId>kotlin-maven-plugin</artifactId>
                 <version>${kotlin.version}</version>
@@ -110,14 +90,29 @@
                     </dependency>
                 </dependencies>
             </plugin>
-            <!-- zipalign the APK (4-byte alignment of stored entries such as resources.arsc):
-                 required on Android 11+ devices when targetSdk >= 30, otherwise
-                 adb install fails with [-124 ... resources.arsc ... uncompressed and aligned] -->
+            <!-- single antrun plugin with two executions:
+                 1) shim-legacy-source-properties (validate): legacy tools/source.properties for android-maven-plugin
+                 2) zipalign-apk (package): 4-byte alignment of stored entries such as resources.arsc -
+                    required on Android 11+ when targetSdk >= 30, otherwise adb install fails with
+                    [-124 ... resources.arsc ... uncompressed and aligned on a 4-byte boundary] -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-antrun-plugin</artifactId>
                 <version>3.1.0</version>
                 <executions>
+                    <execution>
+                        <id>shim-legacy-source-properties</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <mkdir dir="${env.ANDROID_HOME}/tools"/>
+                                <echo file="${env.ANDROID_HOME}/tools/source.properties">Pkg.Revision=26.1.1</echo>
+                            </target>
+                        </configuration>
+                    </execution>
                     <execution>
                         <id>zipalign-apk</id>
                         <phase>package</phase>
