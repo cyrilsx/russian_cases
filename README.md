@@ -117,6 +117,21 @@ export ANDROID_HOME=$HOME/Android/Sdk
 mvn -pl android package                          # produit android/target/*.apk (JDK 8)
 ```
 
+Signature de l'APK : par défaut (CI et local) l'APK est signé avec la **clé debug**. Pour une release
+signée, créez un keystore et renseignez les secrets du dépôt :
+
+```bash
+keytool -genkeypair -v -keystore release.keystore -storetype JKS -alias russian-cases \
+  -keyalg RSA -keysize 2048 -validity 10000 -storepass *** -keypass *** -dname "CN=Russian Cases"
+# secrets GitHub : ANDROID_KEYSTORE_B64 = $(base64 -w0 release.keystore),
+# ANDROID_STORE_PASSWORD, ANDROID_KEY_PASSWORD, ANDROID_KEY_ALIAS
+```
+
+Un tag `v*` déclenche `release.yml` qui construit l'APK signé release (via le plugin Maven avec
+`-Dandroid.sign.debug=false` + variables d'env, puis re-signé v2/v3 et vérifié avec `apksigner`)
+et le publie dans la Release GitHub. En local :
+`ANDROID_KEYSTORE=$PWD/release.keystore ANDROID_STORE_PASS=*** ANDROID_KEY_PASS=*** ANDROID_KEY_ALIAS=russian-cases mvn -pl android package -Dandroid.sign.debug=false`
+
 Les sources du module Android sont en **Kotlin** (`android/src/main/kotlin`, compilées par
 kotlin-maven-plugin 1.3.72, `jvmTarget 1.8`). `minSdkVersion` passe à 26 (Android 8) car `dx` n'accepte les `invokedynamic` de Kotlin qu'à partir de l'API 26. L'app **cible
 Android 16** (`targetSdkVersion 36`, `minSdkVersion 26`) : elle s'installe et tourne sur Android 16.

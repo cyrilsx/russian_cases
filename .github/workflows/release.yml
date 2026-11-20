@@ -50,8 +50,28 @@ jobs:
         with:
           distribution: temurin
           java-version: "8"
-      - name: Build the APK
-        run: mvn -B -ntp verify -pl android
+      - name: Decode release keystore
+        run: echo "${{ secrets.ANDROID_KEYSTORE_B64 }}" | base64 -d > "${{ runner.temp }}/release.keystore"
+      - name: Build the APK (release-signed)
+        run: mvn -B -ntp verify -pl android -Dandroid.sign.debug=false
+        env:
+          ANDROID_KEYSTORE: ${{ runner.temp }}/release.keystore
+          ANDROID_STORE_PASS: ${{ secrets.ANDROID_STORE_PASSWORD }}
+          ANDROID_KEY_PASS: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+      - name: Add v2/v3 signatures and verify (apksigner)
+        env:
+          ANDROID_KEYSTORE: ${{ runner.temp }}/release.keystore
+          ANDROID_STORE_PASS: ${{ secrets.ANDROID_STORE_PASSWORD }}
+          ANDROID_KEY_PASS: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        run: |
+          BT="$ANDROID_HOME/build-tools/30.0.3"
+          APK=$(ls android/target/*.apk | head -1)
+          "$BT/apksigner" sign --ks "$ANDROID_KEYSTORE" \
+            --ks-pass "pass:$ANDROID_STORE_PASS" --key-pass "pass:$ANDROID_KEY_PASS" \
+            --ks-key-alias "$ANDROID_KEY_ALIAS" "$APK"
+          "$BT/apksigner" verify --print-certs "$APK"
       - name: Upload APK artifact
         uses: actions/upload-artifact@v6
         with:
