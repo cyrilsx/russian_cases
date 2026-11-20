@@ -58,6 +58,36 @@
                     </dependency>
                 </dependencies>
             </plugin>
+            <!-- zipalign the APK (4-byte alignment of stored entries such as resources.arsc):
+                 required on Android 11+ devices when targetSdk >= 30, otherwise
+                 adb install fails with [-124 ... resources.arsc ... uncompressed and aligned] -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <execution>
+                        <id>zipalign-apk</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <exec executable="${env.ANDROID_HOME}/build-tools/${android.build-tools}/zipalign"
+                                      failonerror="true">
+                                    <arg value="-f"/>
+                                    <arg value="4"/>
+                                    <arg value="${project.build.directory}/${project.build.finalName}.apk"/>
+                                    <arg value="${project.build.directory}/${project.build.finalName}-aligned.apk"/>
+                                </exec>
+                                <move file="${project.build.directory}/${project.build.finalName}-aligned.apk"
+                                      tofile="${project.build.directory}/${project.build.finalName}.apk"/>
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 </project>
