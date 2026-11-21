@@ -60,7 +60,7 @@ jobs:
           "$SDKMGR" "platforms;android-29" "build-tools;30.0.3"
       - uses: actions/setup-java@v6
         with:
-          distribution: temurin
+          distribution: zulu
           java-version: "8"
       - name: Build the APK
         run: mvn -B -ntp verify -pl android
