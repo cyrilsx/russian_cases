@@ -32,6 +32,8 @@ jobs:
   build-android:
     name: Build Android APK (SDK setup on JDK 21, build on JDK 8)
     runs-on: ubuntu-latest
+    env:
+      HAS_KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_B64 != '' }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-java@v6
@@ -51,13 +53,13 @@ jobs:
           distribution: temurin
           java-version: "8"
       - name: Build the APK (debug-signed; release keystore secret not set)
-        if: ${{ secrets.ANDROID_KEYSTORE_B64 == '' }}
+        if: env.HAS_KEYSTORE != 'true'
         run: mvn -B -ntp verify -pl android
       - name: Decode release keystore
-        if: ${{ secrets.ANDROID_KEYSTORE_B64 != '' }}
+        if: env.HAS_KEYSTORE == 'true'
         run: echo "${{ secrets.ANDROID_KEYSTORE_B64 }}" | base64 -d > "${{ runner.temp }}/release.keystore"
       - name: Build the APK (release-signed)
-        if: ${{ secrets.ANDROID_KEYSTORE_B64 != '' }}
+        if: env.HAS_KEYSTORE == 'true'
         run: mvn -B -ntp verify -pl android -Dandroid.sign.debug=false
         env:
           ANDROID_KEYSTORE: ${{ runner.temp }}/release.keystore
@@ -65,7 +67,7 @@ jobs:
           ANDROID_KEY_PASS: ${{ secrets.ANDROID_KEY_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
       - name: Add v2/v3 signatures and verify (apksigner)
-        if: ${{ secrets.ANDROID_KEYSTORE_B64 != '' }}
+        if: env.HAS_KEYSTORE == 'true'
         env:
           ANDROID_KEYSTORE: ${{ runner.temp }}/release.keystore
           ANDROID_STORE_PASS: ${{ secrets.ANDROID_STORE_PASSWORD }}
