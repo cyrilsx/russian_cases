@@ -47,6 +47,8 @@ and the backend needs the installed webapp jar on its classpath.
 
 ## API
 
+Health check for load balancers (Exoscale LB, SOKS ingress, …): `GET /actuator/health` is public, returns `{"status":"UP"}` — only the health endpoint is exposed, details are never shown.
+
 Toutes les routes `/api/**` (sauf `register`/`login`) nécessitent un en-tête
 `Authorization: Bearer <token>` obtenu via `/api/auth/register` ou `/api/auth/login`.
 All `/api/**` routes (except `register`/`login`) require an `Authorization: Bearer <token>`

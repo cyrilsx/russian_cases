@@ -39,6 +39,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/register", "/api/auth/login").permitAll()
+                        .requestMatchers("/actuator/health").permitAll()
                         .requestMatchers("/", "/index.html", "/app.js", "/styles.css", "/theme-init.js",
                                 "/favicon.ico", "/favicon.svg", "/apple-touch-icon.png", "/robots.txt", "/error").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
