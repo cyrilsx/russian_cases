@@ -163,3 +163,33 @@ et `node webapp/tests/e2e_smoke.mjs`) et APK Android (JDK 8 + SDK 29, `mvn verif
 `russian-cases-android-apk`). Un tag `v*` déclenche `.github/workflows/release.yml` qui construit
 les JAR + l'APK et les publie dans une **Release GitHub** (nécessite `contents: write` sur le
 `GITHUB_TOKEN`, déjà configuré dans le workflow).
+
+## Déploiement / Deployment
+
+The backend is a single executable jar with the webapp bundled in (`mvn -pl webapp,backend package` → `backend/target/backend-1.0.0-SNAPSHOT.jar`). CI uploads it as the `russian-cases-backend-jar` artifact.
+
+### Docker
+```bash
+docker build -t russian-cases .
+docker run -p 8080:8080 russian-cases                                   # dev (H2 in-memory)
+SPRING_PROFILES_ACTIVE=prod APP_JWT_SECRET=$(openssl rand -base64 64) \
+  APP_ADMIN_PASSWORD=... docker run -p 8080:8080 russian-cases           # prod profile
+```
+
+### Exoscale
+- **Compute instance** (recommended to start): create an Ubuntu 24.04 instance in your zone, open a security group (22 from your IP, 80/443 public), attach an Elastic IP + DNS A record. Install Temurin JDK 25, copy the jar, run it as a systemd service, put nginx + certbot in front (443 → 8080). See the env vars below.
+- **SOKS (Kubernetes)**: build/push the image from the `Dockerfile`, deploy with a Deployment + Service + Ingress + cert-manager; secrets via a Kubernetes Secret.
+- **Exoscale PAAS**: git-push deploys with a `Procfile` (`web: java -jar backend/target/backend-1.0.0-SNAPSHOT.jar`).
+
+### Variables d'environnement (profil `prod`, `application-prod.properties`)
+| Variable | Requis | Rôle |
+|---|---|---|
+| `APP_JWT_SECRET` | oui | secret de signature JWT (démarrage impossible sinon) |
+| `APP_ADMIN_PASSWORD` | oui | mot de passe du compte admin initial |
+| `APP_ADMIN_USERNAME` | non (admin) | nom du compte admin initial |
+| `SERVER_PORT` | non (8080) | port d'écoute |
+| `SPRING_DATASOURCE_URL` / `_USERNAME` / `_PASSWORD` / `_DRIVER` | recommandé | PostgreSQL (ex. Aiven Exoscale) — sinon H2 en mémoire (données perdues au redémarrage) |
+| `APP_JWT_TTL_MINUTES` | non (10080) | durée de validité du token |
+| `APP_QUIZ_QUESTIONS_PER_SESSION` | non (15) | questions tirées par quiz |
+
+The app already sends strict security headers (CSP `default-src 'self'`, HSTS, frame-deny, …) and `server.forward-headers-strategy=framework` in prod for TLS-terminating proxies.
