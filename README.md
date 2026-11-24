@@ -49,6 +49,14 @@ and the backend needs the installed webapp jar on its classpath.
 
 Health check for load balancers (Exoscale LB, SOKS ingress, …): `GET /actuator/health` is public, returns `{"status":"UP"}` — only the health endpoint is exposed, details are never shown.
 
+Exact URL to give the Exoscale load balancer (choose one):
+- **LB → instances directly**: `http://<instance-private-ip>:8080/actuator/health` (open TCP 8080 in the instance security group, from the LB only)
+- **LB → nginx (TLS)**: `https://cases.example.ch/actuator/health` — add to the nginx site:
+  `location = /actuator/health { proxy_pass http://127.0.0.1:8080; proxy_set_header Host $host; }`
+
+Recommended LB health-check settings: path `/actuator/health`, protocol HTTP (port 8080) or HTTPS (443), interval 15 s, timeout 5 s, healthy threshold 2, unhealthy threshold 3. Example with the Exoscale CLI:
+`exo loadbalancer healthcheck create <lb-id> --type http --port 8080 --uri /actuator/health --interval 15 --timeout 5 --retries 3`
+
 Toutes les routes `/api/**` (sauf `register`/`login`) nécessitent un en-tête
 `Authorization: Bearer <token>` obtenu via `/api/auth/register` ou `/api/auth/login`.
 All `/api/**` routes (except `register`/`login`) require an `Authorization: Bearer <token>`
