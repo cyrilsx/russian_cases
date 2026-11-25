@@ -179,6 +179,22 @@ Two ways to run on Infomaniak:
    8080, set the env vars from the deployment table, and enable the public IP + SSL in the
    dashboard.
 
+## Container image (Jib → GitHub Container Registry)
+
+The backend (webapp bundled) is published as a daemonless-built image with [Jib](https://github.com/GoogleContainerTools/jib):
+
+- Image: **`ghcr.io/cyrilsx/russian_cases/backend`** — tags: `latest` and the commit SHA, pushed by CI on every `main` build (job `docker-image`); pull requests only validate the image build (`jib:dockerBuild`)
+- Visibility: set the package to **public** once (ghcr.io → package settings) or `gh pull` needs a token
+- Run it:
+  ```bash
+  docker pull ghcr.io/cyrilsx/russian_cases/backend:latest
+  docker run -p 8080:8080 ghcr.io/cyrilsx/russian_cases/backend:latest
+  # prod:
+  SPRING_PROFILES_ACTIVE=prod APP_JWT_SECRET=$(openssl rand -base64 64) APP_ADMIN_PASSWORD=... \
+    docker run -p 8080:8080 ghcr.io/cyrilsx/russian_cases/backend:latest
+  ```
+- Build locally without a Docker daemon: `mvn -pl webapp,backend install -DskipTests && mvn -pl backend jib:buildTar` (or `jib:build -Dimage=...` to push, `jib:dockerBuild` to load into Docker)
+
 ## CI
 
 `.github/workflows/ci.yml` : trois jobs — backend+webapp (JDK 25, `mvn verify -pl webapp,backend`, publie
