@@ -1,0 +1,113 @@
+# Infomaniak Public Cloud — Kubernetes (managed K8s service) deployment for Russian Cases.
+#
+# Prerequisites:
+#   1. Build & push the image (Dockerfile at the repo root, from PR with the Dockerfile):
+#        docker build -t ghcr.io/<your-gh-username>/russian-cases:latest .
+#        docker push ghcr.io/<your-gh-username>/russian-cases:latest
+#      then replace IMAGE below.
+#   2. cert-manager installed on the cluster with a ClusterIssuer named "letsencrypt"
+#      (standard on Infomaniak K8s; otherwise adapt the ingress annotations).
+#   3. Secrets (do NOT commit real values):
+#        kubectl create secret generic russian-cases-secrets \
+#          --from-literal=APP_JWT_SECRET="$(openssl rand -base64 64)" \
+#          --from-literal=APP_ADMIN_PASSWORD='<strong password>' \
+#          --from-literal=SPRING_DATASOURCE_URL='jdbc:postgresql://<aiven-pg-host>:5432/russiancases' \
+#          --from-literal=SPRING_DATASOURCE_USERNAME='rc' \
+#          --from-literal=SPRING_DATASOURCE_PASSWORD='<db password>' \
+#          --from-literal=SPRING_DATASOURCE_DRIVER='org.postgresql.Driver'
+#
+# Apply:  kubectl apply -f deploy/infomaniak/kubernetes.yaml
+#         (set your host in the Ingress below, e.g. cases.example.ch)
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: russian-cases
+  labels:
+    app: russian-cases
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: russian-cases
+  template:
+    metadata:
+      labels:
+        app: russian-cases
+    spec:
+      containers:
+        - name: app
+          image: ghcr.io/<your-gh-username>/russian-cases:latest   # <- replace IMAGE
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: "prod"
+            - name: SERVER_PORT
+              value: "8080"
+            - name: APP_JWT_SECRET
+              valueFrom: { secretKeyRef: { name: russian-cases-secrets, key: APP_JWT_SECRET } }
+            - name: APP_ADMIN_USERNAME
+              value: "admin"
+            - name: APP_ADMIN_PASSWORD
+              valueFrom: { secretKeyRef: { name: russian-cases-secrets, key: APP_ADMIN_PASSWORD } }
+            - name: SPRING_DATASOURCE_URL
+              valueFrom: { secretKeyRef: { name: russian-cases-secrets, key: SPRING_DATASOURCE_URL } }
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom: { secretKeyRef: { name: russian-cases-secrets, key: SPRING_DATASOURCE_USERNAME } }
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom: { secretKeyRef: { name: russian-cases-secrets, key: SPRING_DATASOURCE_PASSWORD } }
+            - name: SPRING_DATASOURCE_DRIVER
+              valueFrom: { secretKeyRef: { name: russian-cases-secrets, key: SPRING_DATASOURCE_DRIVER } }
+          resources:
+            requests: { cpu: "250m", memory: "512Mi" }
+            limits: { cpu: "1000m", memory: "1Gi" }
+          # Load-balancer / ingress health checks hit this public endpoint
+          livenessProbe:
+            httpGet: { path: /actuator/health, port: 8080 }
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet: { path: /actuator/health, port: 8080 }
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: russian-cases
+spec:
+  selector:
+    app: russian-cases
+  ports:
+    - port: 8080
+      targetPort: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: russian-cases
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt"
+    nginx.ingress.kubernetes.io/proxy-body-size: "4m"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts: [ cases.example.ch ]          # <- replace with your domain
+      secretName: russian-cases-tls
+  rules:
+    - host: cases.example.ch                # <- replace with your domain
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: russian-cases
+                port:
+                  number: 8080

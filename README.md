@@ -152,6 +152,23 @@ an **HTTPS** URL (the manifest allows cleartext for local dev only).
 
 Le module `android` n'est inclus dans le build que si `ANDROID_HOME` est défini (profil Maven `android`).
 
+## Infomaniak Cloud
+
+Two ways to run on Infomaniak:
+
+1. **Public Cloud — Kubernetes** (managed K8s): `kubectl apply -f deploy/infomaniak/kubernetes.yaml`
+   after building/pushing the image from the `Dockerfile` and creating the `russian-cases-secrets`
+   Secret (see the comments at the top of that file). The Deployment uses `/actuator/health`
+   for liveness/readiness probes; the Ingress (nginx + cert-manager) terminates TLS.
+2. **Public Cloud — single VM + Octavia LB** (OpenStack CLI): `deploy/infomaniak/openstack-vm.sh`
+   creates the security group, the instance + floating IP, deploys the jar as a systemd
+   service (prod profile, env secrets), and creates the load balancer with a health monitor
+   on `http://<vip>/actuator/health` (HTTP GET, expected 200, every 15 s).
+3. **Jelastic PAAS** (Infomaniak's Jelastic cloud): create a Java/Docker environment, push the
+   image built from the `Dockerfile` (or let Jelastic run the Maven build), map container port
+   8080, set the env vars from the deployment table, and enable the public IP + SSL in the
+   dashboard.
+
 ## CI
 
 `.github/workflows/ci.yml` : trois jobs — backend+webapp (JDK 25, `mvn verify -pl webapp,backend`, publie
