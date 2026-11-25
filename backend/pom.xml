@@ -83,6 +83,12 @@
         </dependency>
     </dependencies>
 
+    <properties>
+        <!-- Published to GitHub Container Registry by CI (job "docker-image"):
+             ghcr.io/cyrilsx/russian_cases/backend:<sha> and :latest -->
+        <jib.to.image>ghcr.io/cyrilsx/russian_cases/backend:latest</jib.to.image>
+    </properties>
+
     <build>
         <plugins>
             <plugin>
@@ -95,6 +101,31 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+            <!-- Daemonless container image build (no Docker needed locally):
+                 mvn -pl webapp,backend install -DskipTests && mvn -pl backend jib:build -Dimage=... -->
+            <plugin>
+                <groupId>com.google.cloud.tools</groupId>
+                <artifactId>jib-maven-plugin</artifactId>
+                <version>3.5.2</version>
+                <configuration>
+                    <from>
+                        <image>eclipse-temurin:25-jre</image>
+                    </from>
+                    <to>
+                        <image>${jib.to.image}</image>
+                    </to>
+                    <container>
+                        <ports>
+                            <port>8080</port>
+                        </ports>
+                        <labels>
+                            <org.opencontainers.image.title>russian-cases-backend</org.opencontainers.image.title>
+                            <org.opencontainers.image.description>Russian Cases: Spring Boot API + webapp (fr/en)</org.opencontainers.image.description>
+                            <org.opencontainers.image.source>https://github.com/cyrilsx/russian_cases</org.opencontainers.image.source>
+                        </labels>
+                    </container>
+                </configuration>
             </plugin>
         </plugins>
     </build>
