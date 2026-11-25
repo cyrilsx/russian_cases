@@ -19,6 +19,12 @@ jobs:
           cache: maven
       - name: Build and test backend and webapp
         run: mvn -B -ntp verify -pl webapp,backend
+      - name: Upload backend jar artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: russian-cases-backend-jar
+          path: backend/target/*.jar
+          retention-days: 30
       - name: Upload JAR artifacts
         uses: actions/upload-artifact@v6
         with:
