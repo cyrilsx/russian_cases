@@ -62,7 +62,7 @@ jobs:
           java-version: "25"
           cache: maven
       - name: Build modules (tests run in backend-webapp)
-        run: mvn -B -ntp install -DskipTests -pl webapp,backend
+        run: mvn -B -ntp install -DskipTests -pl webapp,backend -am
       - name: Log in to ghcr.io
         if: github.ref == 'refs/heads/main'
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
