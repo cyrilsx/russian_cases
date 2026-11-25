@@ -193,6 +193,15 @@ class ApiIntegrationTests {
     }
 
     @Test
+    void healthEndpointIsPublicAndUp() {
+        ResponseEntity<Map> response = rest.getForEntity("/actuator/health", Map.class);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody().get("status")).isEqualTo("UP");
+        ResponseEntity<String> others = rest.getForEntity("/actuator", String.class);
+        assertThat(others.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+    }
+
+    @Test
     void unknownQuestionReturnsLocalized404() {
         ResponseEntity<Map> response = rest.exchange("/api/questions/999999", HttpMethod.GET,
                 new HttpEntity<>(authHeaders(registerUser(), Locale.FRENCH)), Map.class);
