@@ -1,0 +1,6 @@
+.terraform/
+.terraform.lock.hcl
+kubeconfig
+join-command.sh
+terraform.tfvars
+*.tfstate*

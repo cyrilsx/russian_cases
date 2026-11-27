@@ -166,6 +166,10 @@ Le module `android` n'est inclus dans le build que si `ANDROID_HOME` est défini
 
 Two ways to run on Infomaniak:
 
+0. **Public Cloud — full IaC with Terraform** (recommended): `deploy/infomaniak/terraform/`
+   creates the network/router/security groups, a kubeadm Kubernetes cluster on OpenStack VMs,
+   an Octavia LB with a `/actuator/health` monitor, and deploys the app (see
+   `deploy/infomaniak/terraform/README.md`).
 1. **Public Cloud — Kubernetes** (managed K8s): `kubectl apply -f deploy/infomaniak/kubernetes.yaml`
    after building/pushing the image from the `Dockerfile` and creating the `russian-cases-secrets`
    Secret (see the comments at the top of that file). The Deployment uses `/actuator/health`

@@ -1,0 +1,16 @@
+# Copy to terraform.tfvars and fill in. Auth comes from the environment:
+#   source <infomaniak-openstack-rc-file>.sh   # sets OS_* vars; or set OS_CLOUD=infomaniak
+
+# cloud_name      = "infomaniak"                  # clouds.yaml entry / OS_CLOUD
+# zone            = "nova"
+# image           = "Ubuntu 24.04 LTS"
+# flavor_control  = "a4-ram8-disk50-perf1"
+# flavor_worker   = "a4-ram8-disk50-perf1"
+# worker_count    = 2
+# ssh_keypair     = "mykey"                       # openstack keypair create mykey --public-key ~/.ssh/id_rsa.pub
+# ssh_private_key = "~/.ssh/id_rsa"
+# ssh_user        = "ubuntu"
+# k8s_version     = "v1.31"
+# pod_cidr        = "10.244.0.0/16"
+# app_nodeport    = 30080
+# name_prefix     = "russian-cases"
