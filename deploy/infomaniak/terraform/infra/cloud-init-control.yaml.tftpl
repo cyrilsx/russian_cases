@@ -1,0 +1,22 @@
+#cloud-config
+package_update: true
+packages:
+  - apt-transport-https
+  - ca-certificates
+  - curl
+  - gnupg
+  - containerd
+runcmd:
+  - systemctl enable --now containerd
+  - |
+    curl -fsSL https://pkgs.k8s.io/core:/stable:/${k8s_version}/deb/Release.key | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+    echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/${k8s_version}/deb/ /" > /etc/apt/sources.list.d/kubernetes.list
+    apt-get update
+    apt-get install -y kubelet kubeadm kubectl
+    systemctl enable --now kubelet
+  # init the cluster once the API is up, then install flannel and write the join command
+  - kubeadm init --pod-network-cidr=${pod_cidr} --apiserver-advertise-address=${cp_ip}
+  - mkdir -p /root/.kube && cp /etc/kubernetes/admin.conf /root/.kube/config
+  - kubectl apply -f https://raw.githubusercontent.com/flannel-io/flannel/master/Documentation/kube-flannel.yml
+  - kubeadm token create --print-join-command > /root/join-command.sh
+  - chmod +x /root/join-command.sh
